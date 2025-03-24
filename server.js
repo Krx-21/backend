@@ -5,6 +5,8 @@ const bookings = require('./routes/bookings');
 const connectDB = require('./config/db');
 const auth = require('./routes/auth');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+
 
 dotenv.config({path:'config/config.env'});
 
@@ -16,6 +18,9 @@ app.use('/api/v1/rentalCarProviders', rentalCarProviders);
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/bookings', bookings);
 app.use(cookieParser());
+app.use(cors({
+  origin: 'http://localhost:3000'
+}));
 
 const PORT = process.env.PORT || 5000;
 
