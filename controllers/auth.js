@@ -61,10 +61,22 @@ const sendTokenResponse = (user, statusCode, res) => {
     if(process.env.NODE_ENV === 'production') {
         options.secure = true;
     }
+    
     res
         .status(statusCode)
         .cookie('token', token, options)
-        .json({success: true, token});
+        .json({
+            success: true, 
+            token,
+            // ส่ง role และข้อมูลผู้ใช้ที่จำเป็นกลับไป
+            role: user.role,
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
 }
 
 exports.getMe = async (req, res, next) => {
