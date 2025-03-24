@@ -1,0 +1,13 @@
+Admin -> Server: DELETE /api/v1/rentalCarProviders/:id
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect, authorize 'admin')
+AuthController -> Server: next()
+Server -> RentalCarProviderController: deleteRentalCarProvider(req, res)
+RentalCarProviderController -> BookingModel: ลบการจองที่เกี่ยวข้อง
+BookingModel -> DB: DELETE FROM bookings WHERE rentalCarProvider = providerId
+DB -> BookingModel: success
+RentalCarProviderController -> RentalCarProviderModel: ลบผู้ให้บริการ
+RentalCarProviderModel -> DB: DELETE FROM rentalCarProviders WHERE id = providerId
+DB -> RentalCarProviderModel: success
+RentalCarProviderModel -> RentalCarProviderController: success
+RentalCarProviderController -> Server: { success }
+Server -> Admin: ลบสำเร็จ

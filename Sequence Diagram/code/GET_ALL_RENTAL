@@ -1,0 +1,8 @@
+User/Admin -> Server: GET /api/v1/rentalCarProviders
+Server -> RentalCarProviderController: getRentalCarProviders(req, res)
+RentalCarProviderController -> RentalCarProviderModel: ค้นหาผู้ให้บริการรถเช่าทั้งหมด
+RentalCarProviderModel -> DB: SELECT * FROM rentalCarProviders
+DB -> RentalCarProviderModel: [rentalCarProviders array]
+RentalCarProviderModel -> RentalCarProviderController: [rentalCarProviders]
+RentalCarProviderController -> Server: { success, count, data }
+Server -> User/Admin: ส่งข้อมูลผู้ให้บริการรถเช่า

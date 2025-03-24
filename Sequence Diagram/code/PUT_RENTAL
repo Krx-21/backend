@@ -1,0 +1,10 @@
+Admin -> Server: PUT /api/v1/rentalCarProviders/:id
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect, authorize 'admin')
+AuthController -> Server: next()
+Server -> RentalCarProviderController: updateRentalCarProvider(req, res)
+RentalCarProviderController -> RentalCarProviderModel: อัปเดตข้อมูลในฐานข้อมูล
+RentalCarProviderModel -> DB: UPDATE rentalCarProviders SET ... WHERE id = providerId
+DB -> RentalCarProviderModel: updated rentalCarProvider object
+RentalCarProviderModel -> RentalCarProviderController: updated rentalCarProvider object
+RentalCarProviderController -> Server: { success, data }
+Server -> Admin: อัปเดตสำเร็จ

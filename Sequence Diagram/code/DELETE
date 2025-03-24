@@ -1,0 +1,14 @@
+User -> Server: DELETE /api/v1/bookings/:id
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect, authorize 'admin', 'user')
+AuthController -> Server: next()
+Server -> BookingController: deleteBooking(req, res)
+BookingController -> BookingModel: ค้นหาการจองที่ต้องการลบ
+BookingModel -> DB: SELECT * FROM bookings WHERE id = bookingId
+DB -> BookingModel: booking object
+BookingModel -> BookingController: booking object
+BookingController -> BookingModel: ตรวจสอบสิทธิ์ผู้ใช้
+BookingModel -> DB: DELETE FROM bookings WHERE id = bookingId
+DB -> BookingModel: success
+BookingModel -> BookingController: success
+BookingController -> Server: { success }
+Server -> User: การลบสำเร็จ

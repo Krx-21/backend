@@ -1,0 +1,18 @@
+User -> Server: POST /api/v1/rentalCarProviders/:rentalCarProviderId/bookings
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect, authorize 'admin', 'user')
+AuthController -> Server: next()
+Server -> BookingController: addBooking(req, res)
+BookingController -> RentalCarProviderModel: ตรวจสอบว่ามีผู้ให้บริการรถเช่าหรือไม่
+RentalCarProviderModel -> DB: SELECT * FROM rentalCarProviders WHERE id = rentalCarProviderId
+DB -> RentalCarProviderModel: rentalCarProvider object
+RentalCarProviderModel -> BookingController: rentalCarProvider object
+BookingController -> BookingModel: ตรวจสอบจำนวนการจองของผู้ใช้
+BookingModel -> DB: SELECT * FROM bookings WHERE user = userId
+DB -> BookingModel: [bookings array]
+BookingModel -> BookingController: [bookings]
+BookingController -> BookingModel: สร้างการจองใหม่
+BookingModel -> DB: INSERT INTO bookings VALUES (...)
+DB -> BookingModel: booking object
+BookingModel -> BookingController: booking object
+BookingController -> Server: { success, data }
+Server -> User: การจองสำเร็จ

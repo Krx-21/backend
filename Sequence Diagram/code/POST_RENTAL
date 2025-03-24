@@ -1,0 +1,10 @@
+Admin -> Server: POST /api/v1/rentalCarProviders
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect, authorize 'admin')
+AuthController -> Server: next()
+Server -> RentalCarProviderController: createRentalCarProvider(req, res)
+RentalCarProviderController -> RentalCarProviderModel: สร้างผู้ให้บริการใหม่
+RentalCarProviderModel -> DB: INSERT INTO rentalCarProviders VALUES (...)
+DB -> RentalCarProviderModel: rentalCarProvider object
+RentalCarProviderModel -> RentalCarProviderController: rentalCarProvider object
+RentalCarProviderController -> Server: { success, data }
+Server -> Admin: สร้างสำเร็จ

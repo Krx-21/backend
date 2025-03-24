@@ -1,0 +1,14 @@
+User -> Server: PUT /api/v1/bookings/:id
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect, authorize 'admin', 'user')
+AuthController -> Server: next()
+Server -> BookingController: updateBooking(req, res)
+BookingController -> BookingModel: ค้นหาการจองที่ต้องการแก้ไข
+BookingModel -> DB: SELECT * FROM bookings WHERE id = bookingId
+DB -> BookingModel: booking object
+BookingModel -> BookingController: booking object
+BookingController -> BookingModel: ตรวจสอบสิทธิ์ผู้ใช้
+BookingModel -> DB: UPDATE bookings SET ... WHERE id = bookingId
+DB -> BookingModel: updated booking object
+BookingModel -> BookingController: updated booking object
+BookingController -> Server: { success, data }
+Server -> User: อัปเดตข้อมูลสำเร็จ

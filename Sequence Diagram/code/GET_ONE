@@ -1,0 +1,10 @@
+User -> Server: GET /api/v1/bookings/:id
+Server -> AuthController: ตรวจสอบสิทธิ์ (protect)
+AuthController -> Server: next()
+Server -> BookingController: getBooking(req, res)
+BookingController -> BookingModel: ค้นหาการจองโดย id
+BookingModel -> DB: SELECT * FROM bookings WHERE id = bookingId
+DB -> BookingModel: booking object
+BookingModel -> BookingController: booking object
+BookingController -> Server: { success, data }
+Server -> User: ส่งข้อมูลการจองเฉพาะรายการ
