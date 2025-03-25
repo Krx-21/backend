@@ -16,7 +16,7 @@ const app = express();
 // CORS configuration
 const corsOptions = {
   origin: '*', // Specific origin
-  methods: 'GET, POST, OPTIONS', // Include necessary methods
+  methods: 'GET, POST, OPTIONS, PUT, DELETE', // Include necessary methods
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true, // Allow sending credentials
 };
