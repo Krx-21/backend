@@ -15,15 +15,14 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://fe-project-2024-2-jsbygpt-js-txt.vercel.app'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['set-cookie'],
+  origin: 'https://frontend-project-cedt.vercel.app', // Specific origin
+  methods: 'GET, POST, OPTIONS', // Include necessary methods
+  allowedHeaders: 'Content-Type, Authorization',
+  credentials: true, // Allow sending credentials
 };
 
 // Apply middlewares
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
