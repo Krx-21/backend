@@ -4,6 +4,8 @@ const rentalCarProviders = require('./routes/rentalCarProviders');
 const bookings = require('./routes/bookings');
 const cars = require('./routes/cars');
 const promotions = require('./routes/promotions')
+const comment = require('./routes/comments');
+const connectDB = require('./config/db');
 const auth = require('./routes/auth');
 const connectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
@@ -34,6 +36,8 @@ app.use('/api/v1/auth', auth);
 app.use('/api/v1/bookings', bookings);
 app.use('/api/v1/cars', cars);
 app.use('/api/v1/promotions', promotions)
+app.use('/api/v1/comments',comment);
+
 
 const PORT = process.env.PORT || 5000;
 
