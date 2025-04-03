@@ -3,6 +3,12 @@ const { getCars, getCar, createCar, updateCar, deleteCar } = require('../control
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth'); 
 
+const commentRouter = require('./comments');
+
+
+
+router.use('/:carId/comments/',commentRouter);
+
 
 router.route('/')
     .get(getCars);

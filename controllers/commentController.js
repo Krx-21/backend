@@ -1,5 +1,5 @@
-const Comment = require('../models/Comment')++;
-const Car = require('../models/CarTesting');
+const Comment = require('../models/Comment');
+const Car = require('../models/Car');
 
 
 
@@ -20,6 +20,7 @@ const Car = require('../models/CarTesting');
 // }
 
 exports.getComments = async (req,res,next) =>{
+    
     try {
 
         const car = await Car.findById(req.params.carId);
@@ -27,17 +28,20 @@ exports.getComments = async (req,res,next) =>{
         if(!car){
             return res.status(404).json({
                 success: false,
-                message: `No restaurant with the id of ${req.params.carId}`
+                message: `No car with the id of ${req.params.carId}`
             });
-        }
+        }    
+  
+        
 
-        const Comments = await Comment.find({car: req.params.carId});
-        if(!Comments){
-            return res.status(404).json({success: false });
-        }
-
+        const Comments = await Comment.find({car: req.params.carId}).populate({
+            path: 'user' ,
+            select: 'name image'
+        });
+        
         res.status(200).json({
             success: true,
+            count: Comments.length,
             data: Comments
         });
 
@@ -51,20 +55,20 @@ exports.getComments = async (req,res,next) =>{
 exports.addComment = async (req,res,next) => {
     try{
        
-        if(!req.params.carId) req.params.carId = req.body.restaurant;
+        if(!req.params.carId) req.params.carId = req.body.car;
         else{
-            req.body.restaurant = req.params.carId;  
+            req.body.car = req.params.carId;  
         }
-        const restaurant = await Restaurant.findById(req.params.carId);
+        const car = await Car.findById(req.params.carId);
 
         
-        if(!restaurant){
+        if(!car){
             return res.status(404).json({
                 success: false,
                 message: `No restaurant with the id of ${req.params.carId}`
             });
         }
-
+ 
         req.body.user = req.user.id;
         const comment = await Comment.create(req.body);
         res.status(201).json({
@@ -72,7 +76,7 @@ exports.addComment = async (req,res,next) => {
             data: comment
         });
     }catch (error){
-        // console.log(error);
+        console.log(error);
         return res.status(500).json({
             success: false,
             message: "Cannot create Comment"
@@ -107,7 +111,6 @@ exports.updateComment = async (req,res,next) =>{
         });
 
     }catch( error){
-        // console.log(error);
         return res.status(500).json({
             success: false ,
             message: "Cannot update Comment"
