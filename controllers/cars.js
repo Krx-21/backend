@@ -15,8 +15,7 @@ exports.getCars = async (req, res, next) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
-    query = Car.find(JSON.parse(queryStr)).populate('provider');//**wrong populate
-
+    query = Car.find(JSON.parse(queryStr)).populate('provider');
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
         query = query.select(fields);
@@ -26,7 +25,7 @@ exports.getCars = async (req, res, next) => {
         const sortBy = req.query.sort.split(',').join(' ');
         query = query.sort(sortBy);
     } else {
-        query = query.sort('-postedDate');// wrong??
+        query = query.sort('-postedDate');
     }
 
     const page = parseInt(req.query.page, 10) || 1;
@@ -62,7 +61,7 @@ exports.getCars = async (req, res, next) => {
 // @access  Public
 exports.getCar = async (req, res) => {
     try {
-        const car = await Car.findById(req.params.id).populate('provider');//wrong??
+        const car = await Car.findById(req.params.id).populate('provider');
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
         }
@@ -78,7 +77,7 @@ exports.getCar = async (req, res) => {
 exports.createCar = async (req, res) => {
     try {
         const { brand, model, type, topSpeed, fuelType, seatingCapacity, year, pricePerDay, carDescription } = req.body;
-        const providerId = req.params.providerId;//wrong??
+        const providerId = req.params.providerId;
 
         const existingProvider = await RentalCarProvider.findById(providerId);
         if (!existingProvider) {

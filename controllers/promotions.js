@@ -1,0 +1,163 @@
+const Promotion = require('../models/Promotion')
+const RentalCarProvider = require('../models/RentalCarProvider');
+
+// @desc    Get all promotions
+// @route   GET /api/v1/promotions
+// @access  Public
+exports.getPromotions = async (req, res, next) => {
+    let query;
+    
+    const reqQuery = { ...req.query };
+    const removeFields = ['select', 'sort', 'page', 'limit'];
+    removeFields.forEach(param => delete reqQuery[param]);
+
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+
+    query = Promotion.find(JSON.parse(queryStr)).populate('provider');
+
+    if (req.query.select) {
+        const fields = req.query.select.split(',').join(' ');
+        query = query.select(fields);
+    }
+
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        query = query.sort(sortBy);
+    } else {
+        query = query.sort('-postedDate');
+    }
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 25;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    try {
+        const total = await Promotion.countDocuments();
+        query = query.skip(startIndex).limit(limit);
+        const promotions = await query;
+
+        const pagination = {};
+        if (endIndex < total) {
+            pagination.next = { page: page + 1, limit };
+        }
+        if (startIndex > 0) {
+            pagination.prev = { page: page - 1, limit };
+        }
+
+        res.status(200).json({
+            success: true,
+            count: promotions.length,
+            pagination,
+            data: promotions,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
+
+// @desc    Get a single promotion by ID
+// @route   GET /api/v1/promotions/:id
+// @access  Public
+exports.getPromotion = async (req, res, next) => {
+    try {
+        const promotion = await Promotion.findById(req.params.id).populate('provider');
+        if (!promotion) {
+            return res.status(404).json({ success: false, message: 'Promotion not found' });
+        }
+        res.status(200).json({ success: true, data: promotion });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+}
+
+// @desc    Create a new promotion
+// @route   POST /api/v1/promotions/:providerId
+// @access  Private (Admin, Provider required)
+exports.createPromotion = async (req, res, next) => {
+    try {
+        const { title, description, discountPercentage, maxDiscountAmount, minPurchaseAmount, startDate, endDate } = req.body;
+        const providerId = req.params.providerId;
+
+        const existingProvider = await RentalCarProvider.findById(providerId);
+        if (!existingProvider) {
+            return res.status(404).json({ success: false, message: 'Provider not found' });
+        }
+
+        if (!title || !discountPercentage || !maxDiscountAmount || !minPurchaseAmount || !startDate || !endDate) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+
+        if (discountPercentage <= 0 || discountPercentage > 100) {
+            return res.status(422).json({ success: false, message: 'Discount percentage must be between 0 and 100' });
+        }
+
+        if (maxDiscountAmount <= 0) {
+            return res.status(422).json({ success: false, message: 'Max discount amount must be a positive number' });
+        }
+
+        if (minPurchaseAmount < 0) {
+            return res.status(422).json({ success: false, message: 'Min purchase amount cannot be negative' });
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (start >= end) {
+            return res.status(422).json({ success: false, message: 'Start date must be before end date' });
+        }
+
+
+        const promotion = await Promotion.create({
+            provider: providerId,
+            title, 
+            description,
+            discountPercentage, 
+            maxDiscountAmount, 
+            minPurchaseAmount, 
+            startDate, 
+            endDate
+        });
+
+        res.status(201).json({ success: true, data: promotion });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
+// @desc    Update a promotion
+// @route   PUT /api/v1/promotions/:id
+// @access  Private (Provider required)
+exports.updatePromotion = async (req, res, next) => {
+    try {
+        let promotion = await Promotion.findById(req.params.id);
+        if (!promotion) {
+            return res.status(404).json({ success: false, message: 'Promotion not found' });
+        }
+
+        promotion = await Promotion.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({ success: true, data: promotion });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+}
+
+// @desc    Delete a promotion
+// @route   DELETE /api/v1/promotions/:id
+// @access  Private (Provider required)
+exports.deletePromotion = async (req, res, next) => {
+   try {
+        const promotion = await Promotion.findById(req.params.id);
+        if (!promotion) {
+            return res.status(404).json({ success: false, message: 'Promotion not found' });
+        }
+
+        await promotion.deleteOne();
+        res.status(200).json({ success: true, message: 'Promotion deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    } 
+}

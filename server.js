@@ -3,8 +3,9 @@ const dotenv = require('dotenv');
 const rentalCarProviders = require('./routes/rentalCarProviders');
 const bookings = require('./routes/bookings');
 const cars = require('./routes/cars');
-const connectDB = require('./config/db');
+const promotions = require('./routes/promotions')
 const auth = require('./routes/auth');
+const connectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
@@ -32,6 +33,7 @@ app.use('/api/v1/rentalCarProviders', rentalCarProviders);
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/bookings', bookings);
 app.use('/api/v1/cars', cars);
+app.use('/api/v1/promotions', promotions)
 
 const PORT = process.env.PORT || 5000;
 
