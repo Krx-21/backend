@@ -1,5 +1,7 @@
 const Booking = require('../models/Booking');  // Changed from Appointment
 const RentalCarProvider = require('../models/RentalCarProvider');  // Changed from Hospital
+const Car = require('../models/Car');
+//I haven't fix the code yet but In this controller "provider" will equavalient with "admin" since there are none of function that check the role (unlike controllers/booking.js)
 
 exports.getRentalCarProviders = async (req, res, next) => {  // Changed from getHospitals
     try {
@@ -97,17 +99,42 @@ exports.updateRentalCarProvider = async (req, res, next) => {  // Changed from u
     }
 };
 
-exports.deleteRentalCarProvider = async(req, res, next) => {  // Changed from deleteHospital
+// exports.deleteRentalCarProvider = async(req, res, next) => {  // Changed from deleteHospital
+//     try {
+//         const rentalCarProvider = await RentalCarProvider.findByIdAndDelete(req.params.id);  // Changed variable and model name
+//         if(!rentalCarProvider) {
+//             return res.status(404).json({ success: false, message: `Rental car provider not found with id of ${req.params.id}`});  // Updated message
+//         }
+//         await Booking.deleteMany({ rentalCarProvider: req.params.id});  // Changed from Appointment and hospital
+//         await RentalCarProvider.deleteOne({ _id: req.params.id});  // Changed from Hospital
+//         res.status(200).json({ success: true, data: {}});
+//     }
+//     catch(err) {
+//         return res.status(400).json({ success: false});
+//     }
+// };
+
+exports.deleteRentalCarProvider = async (req, res, next) => {
     try {
-        const rentalCarProvider = await RentalCarProvider.findByIdAndDelete(req.params.id);  // Changed variable and model name
-        if(!rentalCarProvider) {
-            return res.status(404).json({ success: false, message: `Rental car provider not found with id of ${req.params.id}`});  // Updated message
+        const rentalCarProvider = await RentalCarProvider.findById(req.params.id);
+        if (!rentalCarProvider) {
+            return res.status(404).json({
+                success: false,
+                message: `Rental car provider not found with id of ${req.params.id}`
+            });
         }
-        await Booking.deleteMany({ rentalCarProvider: req.params.id});  // Changed from Appointment and hospital
-        await RentalCarProvider.deleteOne({ _id: req.params.id});  // Changed from Hospital
-        res.status(200).json({ success: true, data: {}});
-    }
-    catch(err) {
-        return res.status(400).json({ success: false});
+
+        // Delete all cars associated with the provider
+        await Car.deleteMany({ provider: req.params.id });
+
+        // Delete all bookings associated with the provider (if applicable)
+        await Booking.deleteMany({ rentalCarProvider: req.params.id });
+
+        // Delete the provider itself
+        await RentalCarProvider.deleteOne({ _id: req.params.id });
+
+        res.status(200).json({ success: true, data: {} });
+    } catch (err) {
+        return res.status(400).json({ success: false, error: err.message });
     }
 };

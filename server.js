@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const rentalCarProviders = require('./routes/rentalCarProviders');
 const bookings = require('./routes/bookings');
+const cars = require('./routes/cars');
 const connectDB = require('./config/db');
 const auth = require('./routes/auth');
 const cookieParser = require('cookie-parser');
@@ -30,6 +31,7 @@ app.use(cookieParser());
 app.use('/api/v1/rentalCarProviders', rentalCarProviders);
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/bookings', bookings);
+app.use('/api/v1/cars', cars);
 
 const PORT = process.env.PORT || 5000;
 
