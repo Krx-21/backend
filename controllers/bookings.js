@@ -1,6 +1,8 @@
 const Booking = require('../models/Booking');
 const RentalCarProvider = require('../models/RentalCarProvider');
 
+//I haven't fix the code yet so In this controller "provider" will equavalient with "user" in getbookings,addbookings,updatebooking,deletebooking
+
 exports.getBookings = async (req, res, next) => {
     let query;
 
