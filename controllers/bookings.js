@@ -13,9 +13,9 @@ exports.getBookings = async (req, res, next) => {
         });
     }
     else {
-        if (req.params.rentalCarProviderId) {
-            console.log(req.params.rentalCarProviderId);
-            query = Booking.find({rentalCarProvider: req.params.rentalCarProviderId}).populate({
+        if (req.params.ProviderId) {
+            // console.log(req.params.rentalCarProviderId);
+            query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
                 path: "rentalCarProvider",
                 select: "name province tel",
             });

@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.use('/:ProviderId/bookings/', bookingRouter);
 // I add "provider" to every authorize that have "admin" so now provider is kinda equavalient with admin
-router.route('/').get(getRentalCarProviders).post(protect, authorize('admin','provider'), createRentalCarProvider);
-router.route('/:id').get(getRentalCarProvider).put(protect, authorize('admin','provider'), updateRentalCarProvider).delete(protect, authorize('admin','provider'), deleteRentalCarProvider);
+router.route('/').get(getRentalCarProviders).post(protect, authorize('admin'), createRentalCarProvider);
+router.route('/:id').get(getRentalCarProvider).put(protect, authorize('admin','provider'), updateRentalCarProvider).delete(protect, authorize('admin'), deleteRentalCarProvider);
 
 module.exports = router;
