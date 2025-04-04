@@ -33,7 +33,12 @@ const RentalCarProviderSchema = new mongoose.Schema(
     region: {
         type: String,
         required: [true, 'Please add a region']
-    }, 
+    },
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        required: false  // optional because the controller handles it
+    }
 },
     {
         toJSON: { virtuals: true },
