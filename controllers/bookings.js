@@ -56,17 +56,17 @@ exports.getBooking = async (req, res, next) => {
 
 exports.addBooking = async (req, res, next) => {
     try {
-        req.body.rentalCarProvider = req.params.rentalCarProviderId;
+        req.body.rentalCarProvider = req.params.ProviderId;
 
-        const rentalCarProvider = await RentalCarProvider.findById(req.params.rentalCarProviderId);
+        const rentalCarProvider = await RentalCarProvider.findById(req.params.ProviderId);
 
         if(!rentalCarProvider) {
-            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.rentalCarProviderId}'`});
+            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.ProviderId}'`});
         }
 
         req.body.user = req.user.id;
         const existedBookings = await Booking.find({user: req.user.id});
-        if(existedBookings.length >= 3 && req.user.role !== 'admin') {
+        if(existedBookings.length >= 3 && req.user.role === 'user') {
             return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings`});
         }
 
@@ -87,7 +87,7 @@ exports.updateBooking = async (req, res, next) => {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}`});
         }
 
-        if(booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        if(booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
             return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking`});
         }
 
@@ -110,7 +110,7 @@ exports.deleteBooking = async (req, res, next) => {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}`});
         }
 
-        if(booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
+        if(booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
             return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking`});
         }
 
