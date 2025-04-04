@@ -15,7 +15,14 @@ exports.getCars = async (req, res, next) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
-    query = Car.find(JSON.parse(queryStr)).populate('provider');
+    if (req.params.providerId) {
+        query = Car.find({
+            provider: req.params.providerId,
+            ...JSON.parse(queryStr),
+        }).populate('provider');
+    } else {
+        query = Car.find(JSON.parse(queryStr)).populate('provider');
+    }
 
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');

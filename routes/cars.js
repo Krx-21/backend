@@ -1,6 +1,6 @@
 const express = require('express');
 const { getCars, getCar, createCar, updateCar, deleteCar } = require('../controllers/cars');
-const router = express.Router();
+const router = express.Router({mergeParams: true});
 const { protect, authorize } = require('../middleware/auth'); 
 
 const commentRouter = require('./comments');
