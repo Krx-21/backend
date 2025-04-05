@@ -4,7 +4,6 @@ const PromoSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
-        unique: true
     },
     description: {
         type: String,
@@ -33,6 +32,11 @@ const PromoSchema = new mongoose.Schema({
     endDate: {
         type: Date,
         required: true
+    },
+    provider: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        required: false
     },
     createdAt: {
         type: Date,

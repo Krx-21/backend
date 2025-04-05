@@ -7,7 +7,6 @@ const promotions = require('./routes/promotions')
 const comment = require('./routes/comments');
 const connectDB = require('./config/db');
 const auth = require('./routes/auth');
-const connectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 

@@ -80,9 +80,25 @@ exports.getRentalCarProvider = async (req, res, next) => {  // Changed from getH
 
 exports.createRentalCarProvider = async (req, res, next) => {  // Changed from createHospital
     // Secure: Use logged-in user's ID from the JWT
-    req.body.user = req.user._id;
-    const rentalCarProvider = await RentalCarProvider.create(req.body);  // Changed variable and model name
-    res.status(201).json({ success: true, data: rentalCarProvider});  // Updated message
+    try {
+        // Check if this user already has a RentalCarProvider
+        const existingProvider = await RentalCarProvider.findOne({ user: req.user._id });
+    
+        if (existingProvider) {
+          return res.status(400).json({
+            success: false,
+            message: 'You have already created a rental car provider'
+          });
+        }
+    
+        // Assign logged-in user to the provider
+        req.body.user = req.user._id;
+        const rentalCarProvider = await RentalCarProvider.create(req.body);  // Changed variable and model name
+        res.status(201).json({ success: true, data: rentalCarProvider});  // Updated message
+      } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+    
 };
 
 // exports.updateRentalCarProvider = async (req, res, next) => {  // Changed from updateHospital
@@ -117,6 +133,7 @@ exports.updateRentalCarProvider = async (req, res, next) => {
       }
   
       // Proceed with update
+      //delete req.body.user; // u can change provider na kub
       rentalCarProvider = await RentalCarProvider.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
