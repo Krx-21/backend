@@ -18,7 +18,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://frontend-project-cedt.vercel.app', // Specific frontend origin
+  origin: 'http://localhost:3000', // Specific frontend origin
   methods: 'GET, POST, OPTIONS, PUT, DELETE', // Adjust as needed
   allowedHeaders: 'Content-Type, Authorization', // Adjust as needed
   credentials: true, // Make sure this is true if you're handling credentials
