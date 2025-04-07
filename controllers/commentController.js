@@ -3,21 +3,6 @@ const Car = require('../models/Car');
 
 
 
-// exports.getComment = async (req,res,next) => {
-//     try {
-//         const Comments = await Comment.findById(req.params.id);
-//         if(!Comments){
-//             return res.status(404).json({success: false , messsage: `no comment with theid of ${req.params.id}`});
-//         }
-
-//         res.status(200).json({
-//             success: true,
-//             data: Comments
-//         });
-//     }catch (error){
-//         return res.status(500).json({success:false , message:"get Comment error"});
-//     }
-// }
 
 exports.getComments = async (req,res,next) =>{
     
@@ -31,9 +16,6 @@ exports.getComments = async (req,res,next) =>{
                 message: `No car with the id of ${req.params.carId}`
             });
         }    
-  
-        
-
         const Comments = await Comment.find({car: req.params.carId}).populate({
             path: 'user' ,
             select: 'name image'
@@ -65,7 +47,7 @@ exports.addComment = async (req,res,next) => {
         if(!car){
             return res.status(404).json({
                 success: false,
-                message: `No restaurant with the id of ${req.params.carId}`
+                message: `No car with the id of ${req.params.carId}`
             });
         }
  
@@ -132,7 +114,7 @@ exports.deleteComment = async (req,res,next) =>{
         if(comment.user.toString() !== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({
                 success: false,
-                message: `User ${req.user.id} is not autherized to update this reservation`
+                message: `User ${req.user.id} is not autherized to update this `
             });
         }
 
