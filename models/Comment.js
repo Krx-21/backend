@@ -9,7 +9,7 @@ const CommentSchema = new mongoose.Schema({
     },
     car:{
         type: mongoose.Schema.ObjectId,
-        ref: 'Car', //ใส่ไว้ก่อน เปลี่ยนได้
+        ref: 'Car', 
         required: true
     },
     comment: {
