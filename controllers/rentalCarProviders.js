@@ -1,9 +1,11 @@
-const Booking = require('../models/Booking');  // Changed from Appointment
-const RentalCarProvider = require('../models/RentalCarProvider');  // Changed from Hospital
+const Booking = require('../models/Booking'); 
 const Car = require('../models/Car');
-//I haven't fix the code yet but In this controller "provider" will equavalient with "admin" since there are none of function that check the role (unlike controllers/booking.js)
+const RentalCarProvider = require('../models/RentalCarProvider'); 
 
-exports.getRentalCarProviders = async (req, res, next) => {  // Changed from getHospitals
+// @desc    Get all rental car providers
+// @route   GET /api/v1/rentalcarproviders
+// @access  Public
+exports.getRentalCarProviders = async (req, res, next) => {  
     try {
         let query;
         const reqQuery = { ...req.query };
@@ -18,15 +20,15 @@ exports.getRentalCarProviders = async (req, res, next) => {  // Changed from get
             select: 'date user'
         });
 
-        if(req.query.select) {
+        if (req.query.select) {
             const fields = req.query.select.split(',').join(' ');
             query = query.select(fields);
         }
-        if(req.query.sort) {
+
+        if (req.query.sort) {
             const sortBy = req.query.sort.split(',').join(' ');
             query = query.sort(sortBy);
-        }
-        else {
+        } else {
             query = query.sort('-createdAt');
         }
 
@@ -34,20 +36,18 @@ exports.getRentalCarProviders = async (req, res, next) => {  // Changed from get
         const limit = parseInt(req.query.limit, 10) || 25;
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
-        const total = await RentalCarProvider.countDocuments();  // Changed from Hospital
+        const total = await RentalCarProvider.countDocuments();  
 
         query = query.skip(startIndex).limit(limit);
-
-        const rentalCarProviders = await query;  // Changed from hospitals
-
+        const rentalCarProviders = await query; 
         const pagination = {};
+
         if(endIndex < total) {
             pagination.next = {
                 page: page + 1,
                 limit
             }
         }
-
         if(startIndex > 0) {
             pagination.prev = {
                 page: page - 1,
@@ -55,112 +55,82 @@ exports.getRentalCarProviders = async (req, res, next) => {  // Changed from get
             }
         }
 
-        res.status(200).json({ success: true, count: rentalCarProviders.length, pagination, data: rentalCarProviders});  // Changed variable name
-    }
-    catch(err) {
+        res.status(200).json({ success: true, count: rentalCarProviders.length, pagination, data: rentalCarProviders}); 
+    } catch(err) {
         console.error(err);
         res.status(400).json({ success: false});
     }
 };
 
-exports.getRentalCarProvider = async (req, res, next) => {  // Changed from getHospital
+// @desc    Get a single rental car provider
+// @route   GET /api/v1/rentalcarproviders/:id
+// @access  Public
+exports.getRentalCarProvider = async (req, res, next) => {
     try {
-        const rentalCarProvider = await RentalCarProvider.findById(req.params.id);  // Changed variable and model name
-
+        const rentalCarProvider = await RentalCarProvider.findById(req.params.id);
         if(!rentalCarProvider) {
             return res.status(400).json({ success: false});
         }
 
-        res.status(200).json({ success: true, data: rentalCarProvider});  // Changed variable name
-    }
-    catch(err) {
+        res.status(200).json({ success: true, data: rentalCarProvider});
+    } catch(err) {
         res.status(400).json({success: false});
     }
 };
 
-exports.createRentalCarProvider = async (req, res, next) => {  // Changed from createHospital
-    // Secure: Use logged-in user's ID from the JWT
+// @desc    Create a rental car provider
+// @route   POST /api/v1/rentalcarproviders
+// @access  Private
+exports.createRentalCarProvider = async (req, res, next) => { 
     try {
-        // Check if this user already has a RentalCarProvider
         const existingProvider = await RentalCarProvider.findOne({ user: req.user._id });
-    
         if (existingProvider) {
-          return res.status(400).json({
-            success: false,
-            message: 'You have already created a rental car provider'
-          });
+            return res.status(400).json({
+                success: false,
+                message: 'You have already created a rental car provider'
+            });
         }
-    
-        // Assign logged-in user to the provider
+
         req.body.user = req.user._id;
-        const rentalCarProvider = await RentalCarProvider.create(req.body);  // Changed variable and model name
-        res.status(201).json({ success: true, data: rentalCarProvider});  // Updated message
-      } catch (err) {
+        const rentalCarProvider = await RentalCarProvider.create(req.body); 
+        res.status(201).json({ success: true, data: rentalCarProvider }); 
+    } catch (err) {
         res.status(400).json({ success: false, message: err.message });
     }
     
 };
 
-// exports.updateRentalCarProvider = async (req, res, next) => {  // Changed from updateHospital
-//     try {
-//         const rentalCarProvider = await RentalCarProvider.findByIdAndUpdate(req.params.id, req.body, {  // Changed variable and model name
-//             new: true,
-//             runValidators: true
-//         });
-//         if(!rentalCarProvider) {
-//             return res.status(400).json({ success: false});
-//         }
-//         res.status(200).json({ success: true, data: rentalCarProvider});  // Changed variable name
-//     }
-//     catch(err) {
-//         res.status(400).json({ success: false});
-//     }
-// };
+// @desc    Update a rental car provider
+// @route   PUT /api/v1/rentalcarproviders/:id
+// @access  Private
 exports.updateRentalCarProvider = async (req, res, next) => {
     try {
-      let rentalCarProvider = await RentalCarProvider.findById(req.params.id);
+        let rentalCarProvider = await RentalCarProvider.findById(req.params.id);
+        if (!rentalCarProvider) {
+            return res.status(404).json({ success: false, message: 'RentalCarProvider not found' });
+        }
   
-      if (!rentalCarProvider) {
-        return res.status(404).json({ success: false, message: 'RentalCarProvider not found' });
-      }
+        if (req.user.role === 'provider' && rentalCarProvider.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to update this rental car provider'
+            });
+        }
   
-      // If the user is a provider, ensure they own this resource
-      if (req.user.role === 'provider' && rentalCarProvider.user.toString() !== req.user._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: 'You are not authorized to update this rental car provider'
+        rentalCarProvider = await RentalCarProvider.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
         });
-      }
   
-      // Proceed with update
-      //delete req.body.user; // u can change provider na kub
-      rentalCarProvider = await RentalCarProvider.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true
-      });
-  
-      res.status(200).json({ success: true, data: rentalCarProvider });
+        res.status(200).json({ success: true, data: rentalCarProvider });
     } catch (err) {
-      res.status(400).json({ success: false, message: err.message });
+        res.status(400).json({ success: false, message: err.message });
     }
-  };
-  
+};
 
-// exports.deleteRentalCarProvider = async(req, res, next) => {  // Changed from deleteHospital
-//     try {
-//         const rentalCarProvider = await RentalCarProvider.findByIdAndDelete(req.params.id);  // Changed variable and model name
-//         if(!rentalCarProvider) {
-//             return res.status(404).json({ success: false, message: `Rental car provider not found with id of ${req.params.id}`});  // Updated message
-//         }
-//         await Booking.deleteMany({ rentalCarProvider: req.params.id});  // Changed from Appointment and hospital
-//         await RentalCarProvider.deleteOne({ _id: req.params.id});  // Changed from Hospital
-//         res.status(200).json({ success: true, data: {}});
-//     }
-//     catch(err) {
-//         return res.status(400).json({ success: false});
-//     }
-// };
-
+// @desc    Delete a rental car provider
+// @route   DELETE /api/v1/rentalcarproviders/:id
+// @access  Private
 exports.deleteRentalCarProvider = async (req, res, next) => {
     try {
         const rentalCarProvider = await RentalCarProvider.findById(req.params.id);
@@ -171,13 +141,8 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
             });
         }
 
-        // Delete all cars associated with the provider
         await Car.deleteMany({ provider: req.params.id });
-
-        // Delete all bookings associated with the provider (if applicable)
         await Booking.deleteMany({ rentalCarProvider: req.params.id });
-
-        // Delete the provider itself
         await RentalCarProvider.deleteOne({ _id: req.params.id });
 
         res.status(200).json({ success: true, data: {} });

@@ -1,8 +1,9 @@
 const Booking = require('../models/Booking');
 const RentalCarProvider = require('../models/RentalCarProvider');
 
-//I haven't fix the code yet so In this controller "provider" will equavalient with "user" in getbookings,addbookings,updatebooking,deletebooking
-
+// @desc    Get all bookings
+// @route   GET /api/v1/bookings
+// @access  Private
 exports.getBookings = async (req, res, next) => {
     let query;
 
@@ -11,32 +12,32 @@ exports.getBookings = async (req, res, next) => {
             path:'rentalCarProvider',
             select: 'name province tel'
         });
-    }
-    else {
+    } else {
         if (req.params.ProviderId) {
-            // console.log(req.params.rentalCarProviderId);
             query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
                 path: "rentalCarProvider",
                 select: "name province tel",
             });
-        }
-        else {
+        } else {
             query = Booking.find().populate({
                 path:'rentalCarProvider',
                 select: 'name province tel'
             });
         }
     }
+    
     try {
         const bookings = await query;
         res.status(200).json({ success: true, count: bookings.length, data: bookings });
-    }
-    catch (err) {
-        console.Console.log(err);
+    } catch (error) {
+        console.Console.log(error);
         return res.status(500).json({ success: false, message: 'Cannot find Bookings' });
     }
 };
 
+// @desc    Get a single booking
+// @route   GET /api/v1/bookings/:id
+// @access  Private
 exports.getBooking = async (req, res, next) => {
     try {
         const booking = await Booking.findById(req.params.id).populate({
@@ -45,15 +46,17 @@ exports.getBooking = async (req, res, next) => {
         });
 
         if(!booking) {
-            return res.status(404).json({ success: false , message: `No booking found with id of ${req.params.id}`});
+            return res.status(404).json({ success: false , message: `No booking found with id of ${req.params.id}` });
         }
-        res.status(200).json({ success: true, data: booking});
-    }
-    catch(err) {
+        res.status(200).json({ success: true, data: booking });
+    } catch (error) {
         return res.status(500).json({ success: false, message: 'Cannot find Booking' });
     }
 };
 
+// @desc    Create a booking
+// @route   POST /api/v1/bookings/:ProviderId
+// @access  Private
 exports.addBooking = async (req, res, next) => {
     try {
         req.body.rentalCarProvider = req.params.ProviderId;
@@ -61,13 +64,13 @@ exports.addBooking = async (req, res, next) => {
         const rentalCarProvider = await RentalCarProvider.findById(req.params.ProviderId);
 
         if(!rentalCarProvider) {
-            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.ProviderId}'`});
+            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.ProviderId}'` });
         }
 
         req.body.user = req.user.id;
         const existedBookings = await Booking.find({user: req.user.id});
         if(existedBookings.length >= 3 && req.user.role === 'user') {
-            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings`});
+            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings` });
         }
 
         const booking = await Booking.create(req.body);
@@ -75,50 +78,56 @@ exports.addBooking = async (req, res, next) => {
     }
     catch(err) {
         console.log(err);
-        return res.status(500).json({success: false, message: 'Cannot create Booking'});
+        return res.status(500).json({success: false, message: 'Cannot create Booking' });
     }
 }
 
+// @desc    Update a booking
+// @route   PUT /api/v1/bookings/:id
+// @access  Private
 exports.updateBooking = async (req, res, next) => {
     try {
         let booking = await Booking.findById(req.params.id);
 
         if(!booking) {
-            return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}`});
+            return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
         }
 
         if(booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
-            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking`});
+            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking` });
         }
 
         booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
         });
-        res.status(200).json({ success: true, data: booking});
+        res.status(200).json({ success: true, data: booking });
     }
     catch(err) {
         console.log(err);
-        return res.status(500).json({ success: false, message: 'Cannot update Booking'});
+        return res.status(500).json({ success: false, message: 'Cannot update Booking' });
     }
 };
 
+// @desc    Delete a booking
+// @route   DELETE /api/v1/bookings/:id
+// @access  Private
 exports.deleteBooking = async (req, res, next) => {
     try {
         const booking = await Booking.findById(req.params.id);
         if(!booking) {
-            return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}`});
+            return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
         }
 
         if(booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
-            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking`});
+            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking` });
         }
 
         await booking.deleteOne();
-        res.status(200).json({ success: true, data: {}});
+        res.status(200).json({ success: true, data: {} });
     }
     catch(err) {
         console.log(err);
-        return res.status(500).json({ success: false, message: 'Cannot delete Booking'});
+        return res.status(500).json({ success: false, message: 'Cannot delete Booking' });
     }
 };

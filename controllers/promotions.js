@@ -6,7 +6,6 @@ const RentalCarProvider = require('../models/RentalCarProvider');
 // @access  Public
 exports.getPromotions = async (req, res, next) => {
     let query;
-
     const reqQuery = { ...req.query };
     const removeFields = ['select', 'sort', 'page', 'limit'];
     removeFields.forEach(param => delete reqQuery[param]);
@@ -17,8 +16,8 @@ exports.getPromotions = async (req, res, next) => {
 
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
-
     query = Promotion.find(JSON.parse(queryStr))
+    
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
         query = query.select(fields);
@@ -48,8 +47,6 @@ exports.getPromotions = async (req, res, next) => {
             pagination.prev = { page: page - 1, limit };
         }
 
-
-
         res.status(200).json({
             success: true,
             count: promotions.length,
@@ -61,7 +58,7 @@ exports.getPromotions = async (req, res, next) => {
     }
 }
 
-// @desc    Get a single promotion by ID
+// @desc    Get a single promotion
 // @route   GET /api/v1/promotions/:id
 // @access  Public
 exports.getPromotion = async (req, res, next) => {
@@ -78,10 +75,9 @@ exports.getPromotion = async (req, res, next) => {
 
 // @desc    Create a new promotion
 // @route   POST /api/v1/promotions/:providerId
-// @access  Private (Admin, Provider required)
+// @access  Private
 exports.createPromotion = async (req, res, next) => {
     try {
-
         const { role, _id: userId } = req.user;
         let providerId = undefined;
         if (role === 'provider') {
@@ -93,8 +89,7 @@ exports.createPromotion = async (req, res, next) => {
                 return res.status(400).json({ success: false, message: `You can only add promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
             }
             providerId =  userId;
-        }
-        else if (role === 'admin') {
+        } else if (role === 'admin') {
             if (req.body.provider) {
                 const existingRCProvider = await RentalCarProvider.findOne({ user: req.body.provider });
                 if (!existingRCProvider) {
@@ -104,17 +99,9 @@ exports.createPromotion = async (req, res, next) => {
             }
         }
 
-
         const { title, description, discountPercentage, maxDiscountAmount, minPurchaseAmount, startDate, endDate } = req.body;
 
-        if (
-            title === undefined ||
-            discountPercentage === undefined ||
-            maxDiscountAmount === undefined ||
-            minPurchaseAmount === undefined ||
-            !startDate ||
-            !endDate
-        ) {
+        if (title === undefined || discountPercentage === undefined || maxDiscountAmount === undefined || minPurchaseAmount === undefined || !startDate || !endDate) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
 
@@ -136,7 +123,6 @@ exports.createPromotion = async (req, res, next) => {
             return res.status(422).json({ success: false, message: 'Start date must be before end date' });
         }
 
-
         const promotionData = {
             title, 
             description,
@@ -147,9 +133,8 @@ exports.createPromotion = async (req, res, next) => {
             endDate,
         };
 
-        // Add provider only if it's an admin or if it's a provider and their own promotion
         if (providerId) {
-            promotionData.provider = providerId; // Set providerId only if it was set
+            promotionData.provider = providerId;
         }
 
         const promotion = await Promotion.create(promotionData);
@@ -161,7 +146,7 @@ exports.createPromotion = async (req, res, next) => {
 
 // @desc    Update a promotion
 // @route   PUT /api/v1/promotions/:id
-// @access  Private (Provider required)
+// @access  Private
 exports.updatePromotion = async (req, res, next) => {
     try {
         let promotion = await Promotion.findById(req.params.id);
@@ -182,7 +167,7 @@ exports.updatePromotion = async (req, res, next) => {
 
 // @desc    Delete a promotion
 // @route   DELETE /api/v1/promotions/:id
-// @access  Private (Provider required)
+// @access  Private
 exports.deletePromotion = async (req, res, next) => {
    try {
         const promotion = await Promotion.findById(req.params.id);

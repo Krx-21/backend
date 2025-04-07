@@ -1,15 +1,12 @@
 const Comment = require('../models/Comment');
 const Car = require('../models/Car');
 
-
-
-
-exports.getComments = async (req,res,next) =>{
-    
+// @desc    Get all comments
+// @route   GET /api/v1/comments
+// @access  Public
+exports.getComments = async (req,res,next) =>{ 
     try {
-
         const car = await Car.findById(req.params.carId);
-
         if(!car){
             return res.status(404).json({
                 success: false,
@@ -21,28 +18,23 @@ exports.getComments = async (req,res,next) =>{
             select: 'name image'
         });
         
-        res.status(200).json({
-            success: true,
-            count: Comments.length,
-            data: Comments
-        });
-
+        res.status(200).json({ success: true, count: Comments.length, data: Comments });
     }catch (error){
         console.log(error);
         return res.status(500).json({success:false , message:"get Comment error"});
     }
 }
 
-
+// @desc    Get a single comment
+// @route   GET /api/v1/comments/:id
+// @access  Public
 exports.addComment = async (req,res,next) => {
     try{
-       
         if(!req.params.carId) req.params.carId = req.body.car;
         else{
             req.body.car = req.params.carId;  
         }
         const car = await Car.findById(req.params.carId);
-
         
         if(!car){
             return res.status(404).json({
@@ -53,21 +45,18 @@ exports.addComment = async (req,res,next) => {
  
         req.body.user = req.user.id;
         const comment = await Comment.create(req.body);
-        res.status(201).json({
-            success: true,
-            data: comment
-        });
-    }catch (error){
+        res.status(201).json({ success: true, data: comment });
+    } catch (error) {
         console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "Cannot create Comment"
-        });
+        return res.status(500).json({ success: false, message: "Cannot create Comment" });
     }
 }
 
+// @desc    Update a comment
+// @route   PUT /api/v1/comments/:id
+// @access  Private
 exports.updateComment = async (req,res,next) =>{
-    try{
+    try {
         let comment = await Comment.findById(req.params.id);
         if(!comment){
             return res.status(404).json({
@@ -87,22 +76,18 @@ exports.updateComment = async (req,res,next) =>{
             new: true,
             runValidators: true
         });
-        res.status(200).json({
-            success:true,
-            data: comment
-        });
 
-    }catch( error){
-        return res.status(500).json({
-            success: false ,
-            message: "Cannot update Comment"
-        });
+        res.status(200).json({ success:true, data: comment });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Cannot update Comment" });
     }
 }
 
-
+// @desc    Delete a comment
+// @route   DELETE /api/v1/comments/:id
+// @access  Private
 exports.deleteComment = async (req,res,next) =>{
-    try{
+    try {
         const comment = await Comment.findById(req.params.id);
         if(!comment){
             return res.status(404).json({
@@ -119,17 +104,10 @@ exports.deleteComment = async (req,res,next) =>{
         }
 
         await comment.deleteOne();
-        res.status(200).json({
-            success:true,
-            data: {}
-        });
+        res.status(200).json({ success:true, data: {} });
 
-    }catch( error){
+    } catch (error) {
         console.log(error);
-        return res.status(500).json({
-            success: false ,
-            message: "Cannot delete Comment"
-        });
+        return res.status(500).json({ success: false, message: "Cannot delete Comment"});
     }
 }
-
