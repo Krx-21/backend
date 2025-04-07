@@ -57,7 +57,7 @@ exports.getCars = async (req, res, next) => {
             pagination,
             data: cars,
         });
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -73,7 +73,7 @@ exports.getCar = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: car });
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -118,8 +118,8 @@ exports.createCar = async (req, res) => {
         });
 
         res.status(201).json({ success: true, data: car });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
     }
 };
 
@@ -146,8 +146,8 @@ exports.updateCar = async (req, res) => {
         });
 
         res.status(200).json({ success: true, data: car });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
     }
 };
 
@@ -167,7 +167,7 @@ exports.deleteCar = async (req, res) => {
 
         await car.deleteOne();
         res.status(200).json({ success: true, message: 'Car deleted' });
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

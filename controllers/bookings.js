@@ -29,8 +29,8 @@ exports.getBookings = async (req, res, next) => {
     try {
         const bookings = await query;
         res.status(200).json({ success: true, count: bookings.length, data: bookings });
-    } catch (error) {
-        console.Console.log(error);
+    } catch (err) {
+        console.Console.log(err);
         return res.status(500).json({ success: false, message: 'Cannot find Bookings' });
     }
 };
@@ -49,7 +49,7 @@ exports.getBooking = async (req, res, next) => {
             return res.status(404).json({ success: false , message: `No booking found with id of ${req.params.id}` });
         }
         res.status(200).json({ success: true, data: booking });
-    } catch (error) {
+    } catch (err) {
         return res.status(500).json({ success: false, message: 'Cannot find Booking' });
     }
 };

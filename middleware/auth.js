@@ -7,8 +7,9 @@ exports.protect = async (req, res, next) => {
     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
+
     if(!token || token == 'null') {
-        return res.status(401).json({msg: 'Not authorized to access this route'});
+        return res.status(401).json({ msg: 'Not authorized to access this route' });
     }
 
     try {
@@ -18,14 +19,14 @@ exports.protect = async (req, res, next) => {
         next();
     } catch (err) {
         console.error(err.stack);
-        return res.status(401).json({msg: 'Not authorized to access this route'});
+        return res.status(401).json({ msg: 'Not authorized to access this route' });
     }
 }
 
 exports.authorize = (...roles) => {
     return (req, res, next) => {
         if(!roles.includes(req.user.role)) {
-            return res.status(403).json({msg: `Role ${req.user.role} is not authorized to access this route`});
+            return res.status(403).json({ msg: `Role ${req.user.role} is not authorized to access this route` });
         }
         next();
     }

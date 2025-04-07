@@ -58,7 +58,7 @@ exports.getRentalCarProviders = async (req, res, next) => {
         res.status(200).json({ success: true, count: rentalCarProviders.length, pagination, data: rentalCarProviders}); 
     } catch(err) {
         console.error(err);
-        res.status(400).json({ success: false});
+        res.status(400).json({ success: false });
     }
 };
 

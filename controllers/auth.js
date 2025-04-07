@@ -14,10 +14,9 @@ exports.register = async (req, res, next) => {
             role
         });
         sendTokenResponse(user, 200, res);
-    }
-    catch (error) {
+    } catch (err) {
         res.status(400).json({success: false});
-        console.log(error.stack);
+        console.log(err.stack);
     }
 }
 
@@ -41,8 +40,7 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({success: false, msg: 'Invalid credentials'});
         }
         sendTokenResponse(user, 200, res);
-    }
-    catch(error) {
+    } catch(err) {
         res.status(400).json({ success: false });
     }
 }
@@ -54,8 +52,7 @@ exports.getMe = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id);
         res.status(200).json({ success: true, data: user });
-    }
-    catch (err) {
+    } catch (err) {
         res.status(400).json({ success: false });
     }
 }

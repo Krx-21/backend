@@ -53,7 +53,7 @@ exports.getPromotions = async (req, res, next) => {
             pagination,
             data: promotions,
         });
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 }
@@ -68,7 +68,7 @@ exports.getPromotion = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Promotion not found' });
         }
         res.status(200).json({ success: true, data: promotion });
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 }
@@ -139,8 +139,8 @@ exports.createPromotion = async (req, res, next) => {
 
         const promotion = await Promotion.create(promotionData);
         res.status(201).json({ success: true, data: promotion });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
     }
 }
 
@@ -160,8 +160,8 @@ exports.updatePromotion = async (req, res, next) => {
         });
 
         res.status(200).json({ success: true, data: promotion });
-    } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
     }
 }
 
@@ -177,7 +177,7 @@ exports.deletePromotion = async (req, res, next) => {
 
         await promotion.deleteOne();
         res.status(200).json({ success: true, message: 'Promotion deleted' });
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Server Error' });
     } 
 }
