@@ -15,7 +15,15 @@ exports.getCars = async (req, res, next) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
 
-    query = Car.find(JSON.parse(queryStr)).populate('provider');//**wrong populate
+
+    if (req.params.providerId) {
+        query = Car.find({
+            provider: req.params.providerId,
+            ...JSON.parse(queryStr),
+        }).populate('provider');
+    } else {
+        query = Car.find(JSON.parse(queryStr)).populate('provider');
+    }
 
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
@@ -26,7 +34,7 @@ exports.getCars = async (req, res, next) => {
         const sortBy = req.query.sort.split(',').join(' ');
         query = query.sort(sortBy);
     } else {
-        query = query.sort('-postedDate');// wrong??
+        query = query.sort('-postedDate');
     }
 
     const page = parseInt(req.query.page, 10) || 1;
@@ -62,7 +70,7 @@ exports.getCars = async (req, res, next) => {
 // @access  Public
 exports.getCar = async (req, res) => {
     try {
-        const car = await Car.findById(req.params.id).populate('provider');//wrong??
+        const car = await Car.findById(req.params.id).populate('provider');
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
         }
@@ -78,13 +86,12 @@ exports.getCar = async (req, res) => {
 exports.createCar = async (req, res) => {
     try {
         const { brand, model, type, topSpeed, fuelType, seatingCapacity, year, pricePerDay, carDescription } = req.body;
-        const providerId = req.params.providerId;//wrong??
+        const providerId = req.params.providerId;
 
         const existingProvider = await RentalCarProvider.findById(providerId);
         if (!existingProvider) {
             return res.status(404).json({ success: false, message: 'Provider not found' });
         }
-
         const validCarTypes = ['Sedan', 'SUV', 'Hatchback', 'Truck', 'Convertible', 'Van'];
         if (!validCarTypes.includes(type)) {
             return res.status(422).json({ success: false, message: `Invalid car type. Choose from: ${validCarTypes.join(', ')}` });
@@ -93,6 +100,13 @@ exports.createCar = async (req, res) => {
         const validFuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
         if (!validFuelTypes.includes(fuelType)) {
             return res.status(422).json({ success: false, message: `Invalid fuel type. Choose from: ${validFuelTypes.join(', ')}` });
+        }
+
+        if (req.user.role === 'provider' && existingProvider.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+              success: false,
+              message: 'You are not authorized to add car model since you are not the owner'
+            });
         }
 
         const car = await Car.create({
@@ -117,11 +131,45 @@ exports.createCar = async (req, res) => {
 // @desc    Update a car
 // @route   PUT /api/v1/cars/:id
 // @access  Private (Provider required)
+
+// exports.updateCar = async (req, res) => {
+//     try {
+//         let car = await Car.findById(req.params.id);
+//         if (!car) {
+//             return res.status(404).json({ success: false, message: 'Car not found' });
+//         }
+//         if (req.user.role === 'provider' && RentalCarProvider.user.toString() !== req.user._id.toString()) {
+//             return res.status(403).json({
+//               success: false,
+//               message: 'You are not authorized to update this rental car provider'
+//             });
+//         }
+//         car = await Car.findByIdAndUpdate(req.params.id, req.body, {
+//             new: true,
+//             runValidators: true
+//         });
+
+//         res.status(200).json({ success: true, data: car });
+//     } catch (error) {
+//         res.status(400).json({ success: false, message: error.message });
+//     }
+// };
 exports.updateCar = async (req, res) => {
     try {
-        let car = await Car.findById(req.params.id);
+        let car = await Car.findById(req.params.id).populate('provider');
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
+        }
+
+        // Authorization: Only the provider who owns the car can update it
+        if (
+            req.user.role === 'provider' &&
+            car.provider.user.toString() !== req.user._id.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to update this car'
+            });
         }
 
         car = await Car.findByIdAndUpdate(req.params.id, req.body, {
@@ -135,14 +183,25 @@ exports.updateCar = async (req, res) => {
     }
 };
 
+
 // @desc    Delete a car
 // @route   DELETE /api/v1/cars/:id
 // @access  Private (Provider required)
 exports.deleteCar = async (req, res) => {
     try {
-        const car = await Car.findById(req.params.id);
+        const car = await Car.findById(req.params.id).populate('provider');;
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
+        }
+        // Authorization: Only the provider who owns the car can update it
+        if (
+            req.user.role === 'provider' &&
+            car.provider.user.toString() !== req.user._id.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to delete this car'
+            });
         }
 
         await car.deleteOne();
