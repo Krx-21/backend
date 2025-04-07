@@ -1,9 +1,11 @@
 const User = require('../models/User');
 
+// @desc    Register user
+// @route   POST /api/v1/auth/register
+// @access  Public
 exports.register = async (req, res, next) => {
     try {
         const {name, telephoneNumber, email, password, role} = req.body;
-
         const user = await User.create({
             name,
             telephoneNumber,
@@ -11,46 +13,63 @@ exports.register = async (req, res, next) => {
             password,
             role
         });
-        // const token =user.getSignedJwtToken();
-        // res.status(200).json({succes: true, token});
         sendTokenResponse(user, 200, res);
     }
-    catch (err) {
+    catch (error) {
         res.status(400).json({success: false});
-        console.log(err.stack);
+        console.log(error.stack);
     }
 }
 
+// @desc    Login user
+// @route   POST /api/v1/auth/login 
+// @access  Public
 exports.login = async (req, res, next) => {
     try {
         const {email, password} = req.body;
-
         if(!email || !password) {
             return res.status(400).json({success: false, msg: 'Please provide email and password'});
         }
 
-        const user = await User
-            .findOne({email})
-            .select('+password');
-        
+        const user = await User.findOne({email}).select('+password');
         if(!user) {
             return res.status(401).json({success: false, msg: 'Invalid credentials'});
         }
 
         const isMatch = await user.matchPassword(password);
-
         if(!isMatch) {
             return res.status(401).json({success: false, msg: 'Invalid credentials'});
         }
-
-        // const token = user.getSignedJwtToken();
-        // res.status(200).json({success: true, token});
         sendTokenResponse(user, 200, res);
     }
-    catch(err) {
-        res.status(400).json({success: false});
+    catch(error) {
+        res.status(400).json({ success: false });
     }
 }
+
+// @desc    Get current logged in user
+// @route   GET /api/v1/auth/me
+// @access  Private
+exports.getMe = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id);
+        res.status(200).json({ success: true, data: user });
+    }
+    catch (err) {
+        res.status(400).json({ success: false });
+    }
+}
+
+// @desc    Logout user / clear cookie
+// @route   GET /api/v1/auth/logout
+// @access  Public
+exports.logout = async (req, res, next) => {
+    res.cookie('token', 'none', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    });
+    res.status(200).json({ success: true, data: {} });
+};
 
 const sendTokenResponse = (user, statusCode, res) => {
     const token = user.getSignedJwtToken();
@@ -58,7 +77,7 @@ const sendTokenResponse = (user, statusCode, res) => {
         expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
         httpOnly: true
     };
-    if(process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production') {
         options.secure = true;
     }
     
@@ -68,7 +87,6 @@ const sendTokenResponse = (user, statusCode, res) => {
         .json({
             success: true, 
             token,
-            // ส่ง role และข้อมูลผู้ใช้ที่จำเป็นกลับไป
             role: user.role,
             data: {
                 _id: user._id,
@@ -78,25 +96,3 @@ const sendTokenResponse = (user, statusCode, res) => {
             }
         });
 }
-
-exports.getMe = async (req, res, next) => {
-    try {
-        const user = await User.findById(req.user.id);
-        res.status(200).json({success: true, data: user});
-    }
-    catch (err) {
-        res.status(400).json({success: false});
-    }
-}
-
-exports.logout = async (req, res, next) => {
-    res.cookie('token', 'none', {
-        expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true
-    });
-
-    res.status(200).json({
-        success: true,
-        data: {} 
-    });
-};
