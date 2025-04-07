@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking'); 
 const Car = require('../models/Car');
 const RentalCarProvider = require('../models/RentalCarProvider'); 
+const Comment = require('../models/Comment')
 
 // @desc    Get all rental car providers
 // @route   GET /api/v1/rentalcarproviders
@@ -140,10 +141,13 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
                 message: `Rental car provider not found with id of ${req.params.id}`
             });
         }
-
+        
+        const cars = await Car.find({ provider: req.params.id });
+        const carIds = cars.map(car => car._id);
+        await Comment.deleteMany({ car: { $in: carIds } });
         await Car.deleteMany({ provider: req.params.id });
         await Booking.deleteMany({ rentalCarProvider: req.params.id });
-        await RentalCarProvider.deleteOne({ _id: req.params.id });
+        await rentalCarProvider.deleteOne();
 
         res.status(200).json({ success: true, data: {} });
     } catch (err) {

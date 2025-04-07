@@ -1,5 +1,6 @@
 const Car = require('../models/Car');
 const RentalCarProvider = require('../models/RentalCarProvider');
+const Comment = require('../models/Comment');
 
 // @desc    Get all cars
 // @route   GET /api/v1/cars
@@ -165,6 +166,7 @@ exports.deleteCar = async (req, res) => {
             return res.status(403).json({ success: false, message: 'You are not authorized to delete this car' });
         }
 
+        await Comment.deleteMany({ car: car._id });
         await car.deleteOne();
         res.status(200).json({ success: true, message: 'Car deleted' });
     } catch (err) {
