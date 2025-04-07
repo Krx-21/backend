@@ -164,10 +164,36 @@ exports.createPromotion = async (req, res, next) => {
 // @access  Private (Provider required)
 exports.updatePromotion = async (req, res, next) => {
     try {
+
+        const { role, _id: userId } = req.user;
         let promotion = await Promotion.findById(req.params.id);
         if (!promotion) {
             return res.status(404).json({ success: false, message: 'Promotion not found' });
         }
+        if (role === 'provider') {
+            const existingRCProvider = await RentalCarProvider.findOne({ user: userId });
+            if (!existingRCProvider) {
+                return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
+            }
+
+            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.user.toString()) {
+                return res.status(403).json({ success: false, message: `You are not authorized to update this promotion.` });
+            }
+
+            if (req.body.provider && req.body.provider.toString() !== userId.toString()) {
+                return res.status(400).json({ success: false, message: `You can only update promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
+            }
+        }
+        else if (role === 'admin') {
+            if (req.body.provider) {
+                const existingRCProvider = await RentalCarProvider.findOne({ user: req.body.provider });
+                if (!existingRCProvider) {
+                    return res.status(404).json({ success: false, message: `RentalCarProvider not found for user ${req.body.provider}` });
+                }
+            }
+        }
+
+
 
         promotion = await Promotion.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
@@ -185,9 +211,34 @@ exports.updatePromotion = async (req, res, next) => {
 // @access  Private (Provider required)
 exports.deletePromotion = async (req, res, next) => {
    try {
+
+        const { role, _id: userId } = req.user;
         const promotion = await Promotion.findById(req.params.id);
         if (!promotion) {
             return res.status(404).json({ success: false, message: 'Promotion not found' });
+        }
+
+        if (role === 'provider') {
+            const existingRCProvider = await RentalCarProvider.findOne({ user: userId });
+            if (!existingRCProvider) {
+                return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
+            }
+
+            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.user.toString()) {
+                return res.status(403).json({ success: false, message: `You are not authorized to delete this promotion.` });
+            }
+
+            if (req.body.provider && req.body.provider.toString() !== userId.toString()) {
+                return res.status(400).json({ success: false, message: `You can only delete promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
+            }
+        }
+        else if (role === 'admin') {
+            if (req.body.provider) {
+                const existingRCProvider = await RentalCarProvider.findOne({ user: req.body.provider });
+                if (!existingRCProvider) {
+                    return res.status(404).json({ success: false, message: `RentalCarProvider not found for user ${req.body.provider}` });
+                }
+            }
         }
 
         await promotion.deleteOne();
