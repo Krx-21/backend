@@ -8,24 +8,66 @@ const RentalCarProvider = require('../models/RentalCarProvider');
 exports.getBookings = async (req, res, next) => {
     let query;
 
-    if(req.user.role !== 'admin') {
-        query = Booking.find({user: req.user.id}).populate({
-            path:'rentalCarProvider',
-            select: 'name province tel'
-        });
-    } else {
-        if (req.params.ProviderId) {
+    if(req.params.ProviderId){
+        if(req.user.role === 'admin') {
             query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
-                path: "rentalCarProvider",
-                select: "name province tel",
+                path:'rentalCarProvider',
+                select: 'name province tel user'
             });
-        } else {
+        } else if(req.user.role === 'provider') {
+            if(req.params.ProviderId !== req.user.id){
+                return res.status(403).json({
+                    success: false,
+                    message: 'You are not authorized to add booking for other providers beside your own'
+                });
+            }
+
+            query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
+                path:'rentalCarProvider',
+                select: 'name province tel user'
+            });
+        } else{
+            query = Booking.find({user: req.user.id, rentalCarProvider: req.params.ProviderId}).populate({
+                path:'rentalCarProvider',
+                select: 'name province tel user'
+            });
+        }
+    }else{
+        if(req.user.role !== 'admin') {
+            query = Booking.find({user: req.user.id}).populate({
+                path:'rentalCarProvider',
+                select: 'name province tel user'
+            });
+            console.log("eie")
+        }else {
             query = Booking.find().populate({
                 path:'rentalCarProvider',
-                select: 'name province tel'
+                select: 'name province tel user'
             });
         }
     }
+
+    // if(req.user.role !== 'admin') {
+    //     query = Booking.find({user: req.user.id}).populate({
+    //         path:'rentalCarProvider',
+    //         select: 'name province tel user'
+    //     });
+    //     console.log("eie")
+    // } else {
+    //     if (req.params.ProviderId) {
+    //         query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
+    //             path: "rentalCarProvider",
+    //             select: "name province tel user",
+    //         });
+    //         console.log("ss")
+    //     } else {
+    //         query = Booking.find().populate({
+    //             path:'rentalCarProvider',
+    //             select: 'name province tel user'
+    //         });
+    //         console.log("asd")
+    //     }
+    // }
     
     try {
         const bookings = await query;
