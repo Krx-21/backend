@@ -19,9 +19,9 @@ exports.getComments = async (req,res,next) =>{
         });
         
         res.status(200).json({ success: true, count: Comments.length, data: Comments });
-    }catch (err){
+    } catch (err){
+        res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-        return res.status(500).json({success:false , message:"get Comment error"});
     }
 }
 
@@ -47,8 +47,8 @@ exports.addComment = async (req,res,next) => {
         const comment = await Comment.create(req.body);
         res.status(201).json({ success: true, data: comment });
     } catch (err) {
+        res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-        return res.status(500).json({ success: false, message: "Cannot create Comment" });
     }
 }
 
@@ -79,7 +79,8 @@ exports.updateComment = async (req,res,next) =>{
 
         res.status(200).json({ success:true, data: comment });
     } catch (err) {
-        return res.status(500).json({ success: false, message: "Cannot update Comment" });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -107,7 +108,7 @@ exports.deleteComment = async (req,res,next) =>{
         res.status(200).json({ success:true, data: {} });
 
     } catch (err) {
+        res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-        return res.status(500).json({ success: false, message: "Cannot delete Comment"});
     }
 }

@@ -58,8 +58,8 @@ exports.getRentalCarProviders = async (req, res, next) => {
 
         res.status(200).json({ success: true, count: rentalCarProviders.length, pagination, data: rentalCarProviders}); 
     } catch(err) {
-        console.error(err);
-        res.status(400).json({ success: false });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -75,7 +75,8 @@ exports.getRentalCarProvider = async (req, res, next) => {
 
         res.status(200).json({ success: true, data: rentalCarProvider});
     } catch(err) {
-        res.status(400).json({success: false});
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -96,7 +97,8 @@ exports.createRentalCarProvider = async (req, res, next) => {
         const rentalCarProvider = await RentalCarProvider.create(req.body); 
         res.status(201).json({ success: true, data: rentalCarProvider }); 
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
     
 };
@@ -125,7 +127,8 @@ exports.updateRentalCarProvider = async (req, res, next) => {
   
         res.status(200).json({ success: true, data: rentalCarProvider });
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -151,6 +154,7 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
 
         res.status(200).json({ success: true, data: {} });
     } catch (err) {
-        return res.status(400).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };

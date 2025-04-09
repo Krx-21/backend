@@ -54,7 +54,8 @@ exports.getPromotions = async (req, res, next) => {
             data: promotions,
         });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -69,7 +70,8 @@ exports.getPromotion = async (req, res, next) => {
         }
         res.status(200).json({ success: true, data: promotion });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -140,7 +142,8 @@ exports.createPromotion = async (req, res, next) => {
         const promotion = await Promotion.create(promotionData);
         res.status(201).json({ success: true, data: promotion });
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -178,8 +181,6 @@ exports.updatePromotion = async (req, res, next) => {
             }
         }
 
-
-
         promotion = await Promotion.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
             runValidators: true
@@ -187,7 +188,8 @@ exports.updatePromotion = async (req, res, next) => {
 
         res.status(200).json({ success: true, data: promotion });
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -229,6 +231,7 @@ exports.deletePromotion = async (req, res, next) => {
         await promotion.deleteOne();
         res.status(200).json({ success: true, message: 'Promotion deleted' });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     } 
 }
