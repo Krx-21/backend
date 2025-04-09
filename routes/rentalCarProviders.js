@@ -8,7 +8,7 @@ const carRouter = require('./cars');
 const promotionRouter = require('./promotions');
 
 router.use('/:providerId/promotions/', promotionRouter);
-router.use('/:ProviderId/bookings/', bookingRouter);
+router.use('/:RentalCarId/bookings/', bookingRouter);
 router.use('/:providerId/cars/', carRouter);
 
 router.route('/').get(getRentalCarProviders)

@@ -93,3 +93,27 @@ const sendTokenResponse = (user, statusCode, res) => {
             }
         });
 }
+
+// @desc    Update User
+// @route   GET /api/v1/auth/updateProfile
+// @access  Public
+exports.updateUser = async (req,res) => {
+    try{
+        console.log(req.user.id);
+        let user = User.findById(req.user.id);
+        console.log(user);
+        if(!user){
+            return res.status(404).json({success:false , message:`no user with id of ${req.params.id}`})
+        }
+
+        user = await User.findByIdAndUpdate(req.user.id, req.body,{
+            new: true,
+            runValidators: true
+        });
+        
+
+        return res.status(200).json({success: true , data: user});
+    }catch (e){
+        res.status(500).json({success: false, message: `update image fail : ${e}`});
+    }
+}

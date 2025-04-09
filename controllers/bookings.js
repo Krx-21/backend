@@ -8,26 +8,26 @@ const RentalCarProvider = require('../models/RentalCarProvider');
 exports.getBookings = async (req, res, next) => {
     let query;
 
-    if(req.params.ProviderId){
+    if(req.params.RentalCarId){
         if(req.user.role === 'admin') {
-            query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
+            query = Booking.find({rentalCarProvider: req.params.RentalCarId}).populate({
                 path:'rentalCarProvider',
                 select: 'name province tel user'
             });
         } else if(req.user.role === 'provider') {
-            if(req.params.ProviderId !== req.user.id){
+            if(req.params.RentalCarId !== req.user.id){
                 return res.status(403).json({
                     success: false,
                     message: 'You are not authorized to add booking for other providers beside your own'
                 });
             }
 
-            query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
+            query = Booking.find({rentalCarProvider: req.params.RentalCarId}).populate({
                 path:'rentalCarProvider',
                 select: 'name province tel user'
             });
         } else{
-            query = Booking.find({user: req.user.id, rentalCarProvider: req.params.ProviderId}).populate({
+            query = Booking.find({user: req.user.id, rentalCarProvider: req.params.RentalCarId}).populate({
                 path:'rentalCarProvider',
                 select: 'name province tel user'
             });
@@ -46,29 +46,6 @@ exports.getBookings = async (req, res, next) => {
             });
         }
     }
-
-    // if(req.user.role !== 'admin') {
-    //     query = Booking.find({user: req.user.id}).populate({
-    //         path:'rentalCarProvider',
-    //         select: 'name province tel user'
-    //     });
-    //     console.log("eie")
-    // } else {
-    //     if (req.params.ProviderId) {
-    //         query = Booking.find({rentalCarProvider: req.params.ProviderId}).populate({
-    //             path: "rentalCarProvider",
-    //             select: "name province tel user",
-    //         });
-    //         console.log("ss")
-    //     } else {
-    //         query = Booking.find().populate({
-    //             path:'rentalCarProvider',
-    //             select: 'name province tel user'
-    //         });
-    //         console.log("asd")
-    //     }
-    // }
-    
     try {
         const bookings = await query;
         res.status(200).json({ success: true, count: bookings.length, data: bookings });
@@ -98,16 +75,16 @@ exports.getBooking = async (req, res, next) => {
 };
 
 // @desc    Create a booking
-// @route   POST /api/v1/bookings/:ProviderId
+// @route   POST /api/v1/bookings/:RentalCarId
 // @access  Private
 exports.addBooking = async (req, res, next) => {
     try {
-        req.body.rentalCarProvider = req.params.ProviderId;
+        req.body.rentalCarProvider = req.params.RentalCarId;
 
-        const rentalCarProvider = await RentalCarProvider.findById(req.params.ProviderId);
+        const rentalCarProvider = await RentalCarProvider.findById(req.params.RentalCarId);
 
         if(!rentalCarProvider) {
-            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.ProviderId}` });
+            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.RentalCarId}` });
         }
 
         req.body.user = req.user.id;
@@ -137,7 +114,7 @@ exports.addBooking = async (req, res, next) => {
 // @access  Private
 exports.updateBooking = async (req, res, next) => {
     try {
-        let booking = await Booking.findById(req.params.id).populate('rentalCarProvider');
+        let booking = await Booking.findById(req.params.id).populate('rentalCarProvider'); 
 
         if(!booking) {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
