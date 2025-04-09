@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Booking = require('../models/Booking');
 
 // @desc    Register user
 // @route   POST /api/v1/auth/register
@@ -15,7 +16,7 @@ exports.register = async (req, res, next) => {
         });
         sendTokenResponse(user, 200, res);
     } catch (err) {
-        res.status(400).json({success: false});
+        res.status(500).json({success: false});
         console.log(err.stack);
     }
 }
@@ -41,7 +42,7 @@ exports.login = async (req, res, next) => {
         }
         sendTokenResponse(user, 200, res);
     } catch(err) {
-        res.status(400).json({ success: false });
+        res.status(500).json({ success: false });
     }
 }
 
@@ -50,10 +51,18 @@ exports.login = async (req, res, next) => {
 // @access  Private
 exports.getMe = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.id)
+        // .populate('bookedCar').exec();
+        // .populate({
+        //     path: "bookedCar",
+        //     populate: {
+        //         path: "provider" 
+        //     }
+        // });
+        // console.log(user.bookedCar);
         res.status(200).json({ success: true, data: user });
     } catch (err) {
-        res.status(400).json({ success: false });
+        res.status(500).json({ success: false });
     }
 }
 
@@ -94,26 +103,61 @@ const sendTokenResponse = (user, statusCode, res) => {
         });
 }
 
-// @desc    Update User
-// @route   GET /api/v1/auth/updateProfile
-// @access  Public
-exports.updateUser = async (req,res) => {
+// @desc    Upload User Profile
+// @route   GET /api/v1/auth/uploadProfile
+// @access  Private
+exports.uploadProfile = async (req,res) => {
     try{
-        console.log(req.user.id);
-        let user = User.findById(req.user.id);
-        console.log(user);
+        let user = await User.findById(req.user.id);
         if(!user){
-            return res.status(404).json({success:false , message:`no user with id of ${req.params.id}`})
+            return res.status(404).json({success:false , message:`no user with id of ${req.user.id}`});
         }
-
         user = await User.findByIdAndUpdate(req.user.id, req.body,{
             new: true,
             runValidators: true
-        });
+        });    
         
-
         return res.status(200).json({success: true , data: user});
     }catch (e){
-        res.status(500).json({success: false, message: `update image fail : ${e}`});
+        res.status(500).json({success: false, message: `upload image fail : ${e}`});
+    }
+}
+
+
+// @desc    Upload User Profile
+// @route   GET /api/v1/auth/booked
+// @access  Private
+exports.finishBooking = async (req,res) => {
+    try{
+        let user = await User.findById(req.user.id);
+        if(!user){
+            return res.status(404).json({success:false , message:`no user with id of ${req.user.id}`});
+        }
+        console.log(req.params.bookingId);
+        if(!req.body.booking){
+            req.body.booking = req.params.bookingId
+        }else {
+            req.params.bookingId = req.body.booking   
+        }
+
+        const booking = await Booking.findById(req.body.booking);
+        if(!booking){
+            return res.status(404).json({success: false , message: `no booking with id of ${req.params.bookingId}`});
+        }
+        console.log(booking.user.toString());
+
+        if(booking.user.toString() !== req.user.id && req.user.role !== 'admin'){
+            return res.status(401).json({success: false , message: `User ${req.user.id} is not authorized to finish this booking`});
+        }
+
+        if(!user.bookedCar)user.bookedCar = [];
+        if(!user.bookedCar.includes(req.params.bookingId)){
+            user.bookedCar.push(req.params.bookingId);
+            await user.save();
+        }
+        await booking.deleteOne();
+        return res.status(200).json({success: true , data: user});
+    }catch (e){
+        res.status(500).json({success: false, message: `update booked car fail : ${e}`});
     }
 }

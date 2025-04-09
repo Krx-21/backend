@@ -3,6 +3,9 @@ const router = express.Router({mergeParams: true});
 
 const { getBookings, getBooking, addBooking, updateBooking, deleteBooking } = require('../controllers/bookings');
 const { protect, authorize } = require('../middleware/auth');
+const userRouter = require('./auth');
+
+router.use('/:bookingId/auth/',userRouter);
 
 router.route('/')
     .get(protect, getBookings)

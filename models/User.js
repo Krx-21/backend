@@ -37,7 +37,11 @@ const UserSchema = new mongoose.Schema({
     },
     image:{
         type: String 
-    }
+    },
+    bookedCar: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Car',
+    }]
 });
 
 UserSchema.pre('save', async function(next) {

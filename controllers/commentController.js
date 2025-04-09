@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment');
 const Car = require('../models/Car');
+const User = require('../models/User');
 
 // @desc    Get all comments
 // @route   GET /api/v1/comments
@@ -42,7 +43,13 @@ exports.addComment = async (req,res,next) => {
                 message: `No car with the id of ${req.params.carId}`
             });
         }
- 
+        const user = await User.findById(req.user.id);
+        if(!user.bookedCar.includes(req.params.carId) && user.role !== 'admin'){
+            return res.status(400).json({
+                success: false,
+                message: `comment fail`
+            });
+        }
         req.body.user = req.user.id;
         const comment = await Comment.create(req.body);
         res.status(201).json({ success: true, data: comment });
@@ -65,7 +72,7 @@ exports.updateComment = async (req,res,next) =>{
             });
         }
 
-        if(comment.user.toString() !== req.user.id && req.user.role !== 'admin'){
+        if(comment.user.toString() !== req.user.id){
             return res.status(401).json({
                 success: false,
                 message: `User ${req.user.id} is not autherized to update this comment`
