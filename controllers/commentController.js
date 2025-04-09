@@ -25,9 +25,9 @@ exports.getComments = async (req,res,next) =>{
     }
 }
 
-// @desc    Get a single comment
-// @route   GET /api/v1/comments/:id
-// @access  Public
+// @desc    Create a comment
+// @route   POST /api/v1/comments
+// @access  Private
 exports.addComment = async (req,res,next) => {
     try{
         if(!req.params.carId) req.params.carId = req.body.car;
