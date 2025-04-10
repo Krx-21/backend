@@ -1,6 +1,6 @@
 const Booking = require('../models/Booking');
-const RentalCarProvider = require('../models/RentalCarProvider');
-
+const Car = require('../models/Car');
+const rentalCarProvider = require('../models/RentalCarProvider');
 
 // @desc    Get all bookings
 // @route   GET /api/v1/bookings
@@ -8,50 +8,64 @@ const RentalCarProvider = require('../models/RentalCarProvider');
 exports.getBookings = async (req, res, next) => {
     let query;
 
-    if(req.params.RentalCarId){
-        if(req.user.role === 'admin') {
-            query = Booking.find({rentalCarProvider: req.params.RentalCarId}).populate({
-                path:'rentalCarProvider',
-                select: 'name province tel user'
+    if (req.params.carId) {
+        if (req.user.role === 'admin') {
+            query = Booking.find({car: req.params.carId}).populate({
+                path:'car',
+                populate: {
+                    path: "provider"
+                }
             });
-        } else if(req.user.role === 'provider') {
-            if(req.params.RentalCarId !== req.user.id){
+        } else if (req.user.role === 'provider') {
+
+            query = Booking.find({car: req.params.carId}).populate({
+                path:'car',
+                populate: {
+                    path: "provider"
+                }
+            });
+
+            if (query.car.provider !== req.user.id) {
                 return res.status(403).json({
                     success: false,
-                    message: 'You are not authorized to add booking for other providers beside your own'
+                    message: 'You are not authorized to get booking form other providers beside your own'
                 });
             }
 
-            query = Booking.find({rentalCarProvider: req.params.RentalCarId}).populate({
-                path:'rentalCarProvider',
-                select: 'name province tel user'
-            });
-        } else{
-            query = Booking.find({user: req.user.id, rentalCarProvider: req.params.RentalCarId}).populate({
-                path:'rentalCarProvider',
-                select: 'name province tel user'
+            
+        } else {
+            query = Booking.find({user: req.user.id, car: req.params.CarId }).populate({
+                path:'car',
+                populate: {
+                    path: "provider"
+                }
             });
         }
-    }else{
-        if(req.user.role !== 'admin') {
+    } else {
+        if (req.user.role !== 'admin') {
             query = Booking.find({user: req.user.id}).populate({
-                path:'rentalCarProvider',
-                select: 'name province tel user'
+                path:'car',
+                populate: {
+                    path: "provider"
+                }
             });
             console.log("eie")
-        }else {
+        } else {
             query = Booking.find().populate({
-                path:'rentalCarProvider',
-                select: 'name province tel user'
+                path:'car',
+                populate: {
+                    path: "provider"
+                }
             });
         }
-    }
+    } 
+    
     try {
         const bookings = await query;
         res.status(200).json({ success: true, count: bookings.length, data: bookings });
     } catch (err) {
-        console.Console.log(err);
-        return res.status(500).json({ success: false, message: 'Cannot find Bookings' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -61,39 +75,45 @@ exports.getBookings = async (req, res, next) => {
 exports.getBooking = async (req, res, next) => {
     try {
         const booking = await Booking.findById(req.params.id).populate({
-            path: 'rentalCarProvider',
-            select: 'name description tel'
+            path:'car',
+            populate: {
+                path: "provider"
+            } 
         });
+        console.log(req.user);
 
-        if(!booking) {
+        if (!booking) {
             return res.status(404).json({ success: false , message: `No booking found with id of ${req.params.id}` });
         }
         res.status(200).json({ success: true, data: booking });
     } catch (err) {
-        return res.status(500).json({ success: false, message: 'Cannot find Booking' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
 // @desc    Create a booking
-// @route   POST /api/v1/bookings/:RentalCarId
+// @route   POST /api/v1/bookings/:carId
 // @access  Private
 exports.addBooking = async (req, res, next) => {
     try {
-        req.body.rentalCarProvider = req.params.RentalCarId;
+        req.body.car = req.params.carId;
 
-        const rentalCarProvider = await RentalCarProvider.findById(req.params.RentalCarId);
+        const car = await Car.findById(req.params.carId);
 
-        if(!rentalCarProvider) {
-            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.RentalCarId}` });
+        if (!car) {
+            return res.status(404).json({success: false, message: `No rental car provider with the id of ${req.params.carId}` });
         }
 
         req.body.user = req.user.id;
         const existedBookings = await Booking.find({user: req.user.id});
-        if(existedBookings.length >= 3 && req.user.role === 'user') {
+        if (existedBookings.length >= 3 && req.user.role === 'user') {
             return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings` });
         }
 
-        if (req.user.role === 'provider' && rentalCarProvider.user.toString() !== req.user._id.toString()) {
+
+        const provider = rentalCarProvider.findById(car.provider.toString());
+        if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to add booking for other providers beside your own'
@@ -102,10 +122,9 @@ exports.addBooking = async (req, res, next) => {
 
         const booking = await Booking.create(req.body);
         res.status(201).json({ success: true, data: booking});
-    }
-    catch(err) {
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-        return res.status(500).json({success: false, message: 'Cannot create Booking' });
     }
 }
 
@@ -114,17 +133,18 @@ exports.addBooking = async (req, res, next) => {
 // @access  Private
 exports.updateBooking = async (req, res, next) => {
     try {
-        let booking = await Booking.findById(req.params.id).populate('rentalCarProvider'); 
+        let booking = await Booking.findById(req.params.id).populate('car'); 
 
-        if(!booking) {
+        if (!booking) {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
         }
 
-        if(booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
+        if (booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
             return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking` });
         }
 
-        if (req.user.role === 'provider' && booking.rentalCarProvider.toString() !== req.user._id.toString()) {
+        const provider = rentalCarProvider.findById(car.provider.toString());
+        if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to update booking for other providers beside your own'
@@ -136,10 +156,9 @@ exports.updateBooking = async (req, res, next) => {
             runValidators: true
         });
         res.status(200).json({ success: true, data: booking });
-    }
-    catch(err) {
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-        return res.status(500).json({ success: false, message: 'Cannot update Booking' });
     }
 };
 
@@ -148,7 +167,12 @@ exports.updateBooking = async (req, res, next) => {
 // @access  Private
 exports.deleteBooking = async (req, res, next) => {
     try {
-        const booking = await Booking.findById(req.params.id).populate('rentalCarProvider');
+        const booking = await Booking.findById(req.params.id).populate({
+            path:'car',
+            populate: {
+                path: "provider"
+            } 
+        });
         if(!booking) {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
         }
@@ -156,8 +180,10 @@ exports.deleteBooking = async (req, res, next) => {
         if(booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
             return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking` });
         }
-
-        if (req.user.role === 'provider' && booking.rentalCarProvider.toString() !== req.user._id.toString()) {
+        console.log(booking);
+        console.log(req.user.id);
+        // const provider = rentalCarProvider.findById(booking.car.provider.id);
+        if (req.user.role === 'provider' && booking.car.provider.id !== req.user.id) {
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to delete booking for other providers beside your own'
@@ -166,9 +192,8 @@ exports.deleteBooking = async (req, res, next) => {
 
         await booking.deleteOne();
         res.status(200).json({ success: true, data: {} });
-    }
-    catch(err) {
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-        return res.status(500).json({ success: false, message: 'Cannot delete Booking' });
     }
 };

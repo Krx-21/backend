@@ -16,8 +16,8 @@ exports.register = async (req, res, next) => {
         });
         sendTokenResponse(user, 200, res);
     } catch (err) {
-        res.status(500).json({success: false});
-        console.log(err.stack);
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -41,8 +41,10 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({success: false, msg: 'Invalid credentials'});
         }
         sendTokenResponse(user, 200, res);
-    } catch(err) {
-        res.status(500).json({ success: false });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -52,17 +54,18 @@ exports.login = async (req, res, next) => {
 exports.getMe = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id)
-        // .populate('bookedCar').exec();
+        // .populate('bookedCar');
         // .populate({
         //     path: "bookedCar",
         //     populate: {
         //         path: "provider" 
         //     }
         // });
-        // console.log(user.bookedCar);
+        // console.log(...user.bookedCar);
         res.status(200).json({ success: true, data: user });
     } catch (err) {
-        res.status(500).json({ success: false });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 }
 
@@ -118,6 +121,7 @@ exports.uploadProfile = async (req,res) => {
         });    
         
         return res.status(200).json({success: true , data: user});
+
     }catch (e){
         res.status(500).json({success: false, message: `upload image fail : ${e}`});
     }
@@ -144,15 +148,15 @@ exports.finishBooking = async (req,res) => {
         if(!booking){
             return res.status(404).json({success: false , message: `no booking with id of ${req.params.bookingId}`});
         }
-        console.log(booking.user.toString());
+        // console.log(booking.user.toString());
 
         if(booking.user.toString() !== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({success: false , message: `User ${req.user.id} is not authorized to finish this booking`});
         }
 
         if(!user.bookedCar)user.bookedCar = [];
-        if(!user.bookedCar.includes(req.params.bookingId)){
-            user.bookedCar.push(req.params.bookingId);
+        if(!user.bookedCar.includes(booking.car)){
+            user.bookedCar.push(booking.car);
             await user.save();
         }
         await booking.deleteOne();

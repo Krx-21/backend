@@ -1,13 +1,15 @@
 const Booking = require('../models/Booking'); 
 const Car = require('../models/Car');
 const RentalCarProvider = require('../models/RentalCarProvider'); 
-const Comment = require('../models/Comment')
+const Comment = require('../models/Comment');
+const User = require('../models/User');
 
 // @desc    Get all rental car providers
 // @route   GET /api/v1/rentalcarproviders
 // @access  Public
 exports.getRentalCarProviders = async (req, res, next) => {  
     try {
+
         let query;
         const reqQuery = { ...req.query };
         const removeFields = ['select', 'sort', 'page', 'limit'];
@@ -17,8 +19,7 @@ exports.getRentalCarProviders = async (req, res, next) => {
         let queryStr = JSON.stringify(req.query);
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
         query = RentalCarProvider.find(JSON.parse(queryStr)).populate({
-            path: 'bookings',
-            select: 'date user'
+            path: 'user'
         });
 
         if (req.query.select) {
@@ -58,8 +59,8 @@ exports.getRentalCarProviders = async (req, res, next) => {
 
         res.status(200).json({ success: true, count: rentalCarProviders.length, pagination, data: rentalCarProviders}); 
     } catch(err) {
-        console.error(err);
-        res.status(400).json({ success: false });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -68,14 +69,15 @@ exports.getRentalCarProviders = async (req, res, next) => {
 // @access  Public
 exports.getRentalCarProvider = async (req, res, next) => {
     try {
-        const rentalCarProvider = await RentalCarProvider.findById(req.params.id);
+        const rentalCarProvider = await RentalCarProvider.findById(req.params.id).populate('user')
         if(!rentalCarProvider) {
             return res.status(400).json({ success: false});
         }
 
         res.status(200).json({ success: true, data: rentalCarProvider});
     } catch(err) {
-        res.status(400).json({success: false});
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -91,12 +93,22 @@ exports.createRentalCarProvider = async (req, res, next) => {
                 message: 'You have already created a rental car provider'
             });
         }
+        const user = await User.findById(req.user.id);
 
+        if(!user){
+            return res.status(404).json({
+                success:false,
+                message: `no user with id of ${req.user.id}`
+            })
+        }
         req.body.user = req.user._id;
         const rentalCarProvider = await RentalCarProvider.create(req.body); 
+        user.myRcpId = rentalCarProvider._id;
+        await user.save()
         res.status(201).json({ success: true, data: rentalCarProvider }); 
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
     
 };
@@ -125,7 +137,8 @@ exports.updateRentalCarProvider = async (req, res, next) => {
   
         res.status(200).json({ success: true, data: rentalCarProvider });
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -151,6 +164,7 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
 
         res.status(200).json({ success: true, data: {} });
     } catch (err) {
-        return res.status(400).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };

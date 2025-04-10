@@ -40,8 +40,14 @@ const UserSchema = new mongoose.Schema({
     },
     bookedCar: [{
         type: mongoose.Schema.ObjectId,
-        ref: 'Car',
-    }]
+        ref: 'Car'
+    }],
+    myRcpId: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'RentalCarProvider',
+        required: false
+    }
+
 });
 
 UserSchema.pre('save', async function(next) {

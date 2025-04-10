@@ -4,8 +4,10 @@ const router = express.Router({mergeParams: true});
 const { getCars, getCar, createCar, updateCar, deleteCar } = require('../controllers/cars');
 const { protect, authorize } = require('../middleware/auth'); 
 const commentRouter = require('./comments');
+const bookingRouter = require('./bookings')
 
 router.use('/:carId/comments/', commentRouter);
+router.use('/:carId/bookings', bookingRouter);
 
 router.route('/')
     .get(getCars);

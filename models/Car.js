@@ -56,7 +56,10 @@ const CarSchema = new mongoose.Schema(
         postedDate: {
             type: Date,
             default: Date.now
-        }
+        },
+        image:[{
+            type: String
+        }]
     },
     {
         toJSON: { virtuals: true },

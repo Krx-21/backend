@@ -59,7 +59,8 @@ exports.getCars = async (req, res, next) => {
             data: cars,
         });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -75,7 +76,8 @@ exports.getCar = async (req, res) => {
 
         res.status(200).json({ success: true, data: car });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -120,7 +122,8 @@ exports.createCar = async (req, res) => {
 
         res.status(201).json({ success: true, data: car });
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -148,7 +151,8 @@ exports.updateCar = async (req, res) => {
 
         res.status(200).json({ success: true, data: car });
     } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };
 
@@ -170,6 +174,7 @@ exports.deleteCar = async (req, res) => {
         await car.deleteOne();
         res.status(200).json({ success: true, message: 'Car deleted' });
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: "Unexpected Error" });
+        console.log(err);
     }
 };

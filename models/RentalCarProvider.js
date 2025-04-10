@@ -35,7 +35,7 @@ const RentalCarProviderSchema = new mongoose.Schema(
         user: {
             type: mongoose.Schema.ObjectId,
             ref: 'User',
-            required: false  // optional because the controller handles it
+            required: true
         }
     },
     {
