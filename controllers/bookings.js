@@ -133,7 +133,12 @@ exports.addBooking = async (req, res, next) => {
 // @access  Private
 exports.updateBooking = async (req, res, next) => {
     try {
-        let booking = await Booking.findById(req.params.id).populate('car'); 
+        let booking = await Booking.findById(req.params.id).populate({
+            path:'car',
+            populate: {
+                path: "provider"
+            } 
+        });
 
         if (!booking) {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
@@ -143,7 +148,7 @@ exports.updateBooking = async (req, res, next) => {
             return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking` });
         }
 
-        const provider = rentalCarProvider.findById(car.provider.toString());
+        const provider = rentalCarProvider.findById(booking.car.provider.toString());
         if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
