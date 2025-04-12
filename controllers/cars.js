@@ -1,5 +1,6 @@
 const Car = require('../models/Car');
-const RentalCarProvider = require('../models/RentalCarProvider'); 
+const Promotion = require('../models/Promotion')
+const RentalCarProvider = require('../models/RentalCarProvider');
 const Comment = require('../models/Comment');
 
 // @desc    Get all cars
@@ -176,5 +177,58 @@ exports.deleteCar = async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
+    }
+};
+
+// @desc    calculate car price
+// @route   POST /api/v1/cars/calculate-price
+// @access  Private
+exports.calculateCarPrice = async (req, res) => {
+    try {
+        const { carId, numberOfDays, promoId } = req.body;
+
+        if (!carId || !numberOfDays) {
+            return res.status(400).json({ success: false, message: 'carId and numberOfDays are required' });
+        }
+
+        const car = await Car.findById(carId);
+        if (!car) {
+            return res.status(404).json({ success: false, message: 'Car not found' });
+        }
+
+        const basePrice = car.pricePerDay * numberOfDays;
+        let finalPrice = basePrice;
+
+        if (promoId) {
+            const promotion = await Promotion.findById(promoId);
+
+            const now = new Date();
+            const isValidPromo = promotion &&
+                now >= new Date(promotion.startDate) &&
+                now <= new Date(promotion.endDate) &&
+                basePrice >= promotion.minPurchaseAmount;
+
+            if (isValidPromo) {
+                const discount = Math.min(
+                    (promotion.discountPercentage / 100) * basePrice,
+                    promotion.maxDiscountAmount
+                );
+                finalPrice = basePrice - discount;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                carId: car._id,
+                numberOfDays,
+                pricePerDay: car.pricePerDay,
+                basePrice,
+                finalPrice
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Unexpected error occurred" });
     }
 };
