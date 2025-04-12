@@ -90,10 +90,10 @@ exports.createPromotion = async (req, res, next) => {
             if (req.body.provider && req.body.provider.toString() !== userId.toString()) {
                 return res.status(400).json({ success: false, message: `You can only add promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
             }
-            providerId =  userId;
+            providerId =  existingRCProvider._id;
         } else if (role === 'admin') {
             if (req.body.provider) {
-                const existingRCProvider = await RentalCarProvider.findOne({ user: req.body.provider });
+                const existingRCProvider = await RentalCarProvider.findById(req.body.provider);
                 if (!existingRCProvider) {
                     return res.status(404).json({ success: false, message: `RentalCarProvider not found for user ${req.body.provider}` });
                 }
@@ -101,9 +101,9 @@ exports.createPromotion = async (req, res, next) => {
             }
         }
 
-        const { title, description, discountPercentage, maxDiscountAmount, minPurchaseAmount, startDate, endDate } = req.body;
+        const { title, description, discountPercentage, maxDiscountAmount, minPurchaseAmount, startDate, endDate, amount } = req.body;
 
-        if (title === undefined || discountPercentage === undefined || maxDiscountAmount === undefined || minPurchaseAmount === undefined || !startDate || !endDate) {
+        if (title === undefined || discountPercentage === undefined || maxDiscountAmount === undefined || minPurchaseAmount === undefined || !startDate || !endDate || !amount) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
 
@@ -119,12 +119,15 @@ exports.createPromotion = async (req, res, next) => {
             return res.status(422).json({ success: false, message: 'Min purchase amount cannot be negative' });
         }
 
+        if (amount < 0) {
+            return res.status(422).json({ success: false, message: 'Amount cannot be negative' });
+        }
+
         const start = new Date(startDate);
         const end = new Date(endDate);
         if (start >= end) {
             return res.status(422).json({ success: false, message: 'Start date must be before end date' });
         }
-
         const promotionData = {
             title, 
             description,
@@ -133,12 +136,13 @@ exports.createPromotion = async (req, res, next) => {
             minPurchaseAmount, 
             startDate, 
             endDate,
+            amount
         };
-
+        
         if (providerId) {
             promotionData.provider = providerId;
         }
-
+        
         const promotion = await Promotion.create(promotionData);
         res.status(201).json({ success: true, data: promotion });
     } catch (err) {
@@ -235,3 +239,5 @@ exports.deletePromotion = async (req, res, next) => {
         console.log(err);
     } 
 }
+
+

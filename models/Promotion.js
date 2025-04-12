@@ -35,13 +35,20 @@ const PromoSchema = new mongoose.Schema({
     },
     provider: {
         type: mongoose.Schema.ObjectId,
-        ref: 'User',
+        ref: 'RentalCarProvider',
         required: false
     },
+    amount:{
+        type: Number,
+        required: true
+    }
+    ,
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
+
+
 
 module.exports = mongoose.model('Promotion', PromoSchema);
