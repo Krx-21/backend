@@ -1,5 +1,5 @@
 const Car = require('../models/Car');
-const RentalCarProvider = require('../models/RentalCarProvider');
+const RentalCarProvider = require('../models/RentalCarProvider'); 
 const Comment = require('../models/Comment');
 
 // @desc    Get all cars

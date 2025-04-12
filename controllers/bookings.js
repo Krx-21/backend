@@ -7,6 +7,7 @@ const rentalCarProvider = require('../models/RentalCarProvider');
 // @access  Private
 exports.getBookings = async (req, res, next) => {
     let query;
+    
 
     if (req.params.carId) {
         if (req.user.role === 'admin') {
@@ -17,20 +18,24 @@ exports.getBookings = async (req, res, next) => {
                 }
             });
         } else if (req.user.role === 'provider') {
-
-            query = Booking.find({car: req.params.carId}).populate({
+            const car = await Car.findById(req.params.carId);
+            const rcp = await rentalCarProvider.findOne({user: req.user.id});
+            const bookings = await Booking.find({car: req.params.carId})
+            .populate({
                 path:'car',
                 populate: {
                     path: "provider"
                 }
             });
-
-            if (query.car.provider !== req.user.id) {
+  
+            if ( car.provider.toString() !== rcp._id.toString()) {
                 return res.status(403).json({
                     success: false,
                     message: 'You are not authorized to get booking form other providers beside your own'
                 });
             }
+            return res.status(200).json({ success: true, count: bookings.length, data: bookings });
+            
 
             
         } else {
@@ -110,9 +115,9 @@ exports.addBooking = async (req, res, next) => {
         if (existedBookings.length >= 3 && req.user.role === 'user') {
             return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings` });
         }
-
-
-        const provider = rentalCarProvider.findById(car.provider.toString());
+        
+        const provider = await rentalCarProvider.findById(car.provider.toString());
+        
         if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
@@ -133,7 +138,12 @@ exports.addBooking = async (req, res, next) => {
 // @access  Private
 exports.updateBooking = async (req, res, next) => {
     try {
-        let booking = await Booking.findById(req.params.id).populate('car'); 
+        let booking = await Booking.findById(req.params.id).populate({
+            path:'car',
+            populate: {
+                path: "provider"
+            } 
+        });
 
         if (!booking) {
             return res.status(404).json({ success: false, message: `No booking with the id of ${req.params.id}` });
@@ -143,7 +153,7 @@ exports.updateBooking = async (req, res, next) => {
             return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking` });
         }
 
-        const provider = rentalCarProvider.findById(car.provider.toString());
+        const provider = rentalCarProvider.findById(booking.car.provider.toString());
         if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
