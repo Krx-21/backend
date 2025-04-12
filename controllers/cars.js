@@ -87,7 +87,7 @@ exports.getCar = async (req, res) => {
 // @access  Private
 exports.createCar = async (req, res) => {
     try {
-        const { brand, model, type, topSpeed, fuelType, seatingCapacity, year, pricePerDay, carDescription } = req.body;
+        const { brand, model, type, topSpeed, fuelType, seatingCapacity, year, pricePerDay, carDescription,image } = req.body;
         const providerId = req.params.providerId;
         const existingProvider = await RentalCarProvider.findById(providerId);
         if (!existingProvider) {
@@ -98,11 +98,6 @@ exports.createCar = async (req, res) => {
         if (!validCarTypes.includes(type)) {
             return res.status(422).json({ success: false, message: `Invalid car type. Choose from: ${validCarTypes.join(', ')}` });
         }
-
-        // const validFuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
-        // if (!validFuelTypes.includes(fuelType)) {
-        //     return res.status(422).json({ success: false, message: `Invalid fuel type. Choose from: ${validFuelTypes.join(', ')}` });
-        // }
 
         if (req.user.role === 'provider' && existingProvider.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ success: false, message: 'You are not authorized to add car model since you are not the owner' });
@@ -118,7 +113,8 @@ exports.createCar = async (req, res) => {
             seatingCapacity,
             year,
             pricePerDay,
-            carDescription
+            carDescription,
+            image
         });
 
         res.status(201).json({ success: true, data: car });
