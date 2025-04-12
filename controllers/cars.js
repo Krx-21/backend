@@ -99,10 +99,10 @@ exports.createCar = async (req, res) => {
             return res.status(422).json({ success: false, message: `Invalid car type. Choose from: ${validCarTypes.join(', ')}` });
         }
 
-        const validFuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
-        if (!validFuelTypes.includes(fuelType)) {
-            return res.status(422).json({ success: false, message: `Invalid fuel type. Choose from: ${validFuelTypes.join(', ')}` });
-        }
+        // const validFuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
+        // if (!validFuelTypes.includes(fuelType)) {
+        //     return res.status(422).json({ success: false, message: `Invalid fuel type. Choose from: ${validFuelTypes.join(', ')}` });
+        // }
 
         if (req.user.role === 'provider' && existingProvider.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({ success: false, message: 'You are not authorized to add car model since you are not the owner' });
