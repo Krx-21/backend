@@ -18,7 +18,7 @@ const CommentSchema = new mongoose.Schema({
     rating: {
         type: Number,
         required: [true, 'your rating'],
-        min: 1,
+        min: 0,
         max: 5
     },
     createdAt: {
