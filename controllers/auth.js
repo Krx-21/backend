@@ -120,7 +120,7 @@ exports.uploadProfile = async (req,res) => {
 }
 
 
-// @desc    Upload User Profile
+// @desc    Update booked car
 // @route   GET /api/v1/auth/booked
 // @access  Private
 exports.finishBooking = async (req,res) => {
@@ -157,3 +157,29 @@ exports.finishBooking = async (req,res) => {
         res.status(500).json({success: false, message: `update booked car fail : ${e}`});
     }
 }
+
+
+
+// @desc    Get all users (Admin only)
+// @route   GET /api/v1/auth/users
+// @access  Private/Admin
+exports.getAllUsers = async (req, res) => {
+    try {
+        // Only allow admin to access
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized to access this route' });
+        }
+
+        const users = await User.find()
+
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            data: users
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to get users", error: err.message });
+    }
+};
+
+
