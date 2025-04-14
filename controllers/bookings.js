@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Car = require('../models/Car');
 const rentalCarProvider = require('../models/RentalCarProvider');
+const Promotion = require('../models/Promotion')
 
 // @desc    Get all bookings
 // @route   GET /api/v1/bookings
@@ -116,14 +117,72 @@ exports.addBooking = async (req, res, next) => {
             return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings` });
         }
         
+        const startDate = new Date(req.body.start_date)
+        const endDate = new Date(req.body.end_date)
+
+        if (!req.body.start_date || !req.body.end_date) {
+            return res.status(400).json({ success: false, message: "startDate and endDate are required" });
+        }
+
+        if(startDate>endDate){
+            return res.status(400).json({ 
+                success: false,
+                error: "Start date must be before end date."
+            });
+        }
+        if(startDate < Date.now()){
+            return res.status(400).json({
+                success: false,
+                message: "Can't Make Reservation in Past"
+            })
+        }
+
         const provider = await rentalCarProvider.findById(car.provider.toString());
-        
         if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to add booking for other providers beside your own'
             });
         }
+
+
+        const diffInMs = endDate - startDate;
+        const numberOfDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+        const basePrice = car.pricePerDay * numberOfDays;
+        let finalPrice = basePrice;
+
+        const promoId = req.body.promoId;
+        if (promoId) {
+            const promotion = await Promotion.findById(promoId);
+            if (!promotion) {
+                throw new Error('Promotion not found');
+            }
+
+            if (promotion.provider && promotion.provider.toString() !== car.provider.toString()) {
+                throw new Error("Promotion provider does not match car provider");
+            }
+
+            const now = new Date();
+            const isValidPromo =
+                now >= new Date(promotion.startDate) &&
+                now <= new Date(promotion.endDate) &&
+                basePrice >= promotion.minPurchaseAmount &&
+                promotion.amount > 0;
+
+            if (isValidPromo) {
+                const discount = Math.min(
+                    (promotion.discountPercentage / 100) * basePrice,
+                    promotion.maxDiscountAmount
+                );
+                finalPrice = basePrice - discount;
+                if (finalPrice < 0) finalPrice = 0;
+        
+                promotion.amount -= 1;
+                await promotion.save();
+            }
+        }
+
+        req.body.totalprice = finalPrice;
 
         const booking = await Booking.create(req.body);
         res.status(201).json({ success: true, data: booking});

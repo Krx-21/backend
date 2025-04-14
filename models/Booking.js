@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
-const RentalCarProvider = require('./RentalCarProvider');
 
 const BookingSchema = new mongoose.Schema({
-    date: {
+    start_date: {
+        type: Date,
+        required: true
+    },
+    end_date: {
         type: Date,
         required: true
     },
@@ -14,6 +17,10 @@ const BookingSchema = new mongoose.Schema({
     car: {
         type: mongoose.Schema.ObjectId,
         ref: 'Car',
+        required: true
+    },
+    totalprice: {
+        type: Number,
         required: true
     },
     createdAt: {
