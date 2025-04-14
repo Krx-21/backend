@@ -191,18 +191,28 @@ exports.calculateCarPrice = async (req, res) => {
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
         }
-
+        
         const basePrice = car.pricePerDay * numberOfDays;
         let finalPrice = basePrice;
-
+        
         if (promoId) {
             const promotion = await Promotion.findById(promoId);
-
+            if(!promotion){
+                return res.status(404).json({ success: false, message: 'Promotion not found' });
+            }
+    
+            if(promotion.provider){
+                if(promotion.provider.toString() !== car.provider.toString()){
+                    return res.status(400).json({ message: "Promotion provider does not match car provider."});
+                }
+            }
+            
             const now = new Date();
             const isValidPromo = promotion &&
-                now >= new Date(promotion.startDate) &&
-                now <= new Date(promotion.endDate) &&
-                basePrice >= promotion.minPurchaseAmount;
+            now >= new Date(promotion.startDate) &&
+            now <= new Date(promotion.endDate) &&
+            basePrice >= promotion.minPurchaseAmount &&
+            promotion.amount > 0;
 
             if (isValidPromo) {
                 const discount = Math.min(
@@ -210,6 +220,7 @@ exports.calculateCarPrice = async (req, res) => {
                     promotion.maxDiscountAmount
                 );
                 finalPrice = basePrice - discount;
+                if(finalPrice < 0) finalPrice = 0;
             }
         }
 
