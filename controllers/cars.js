@@ -93,7 +93,7 @@ exports.createCar = async (req, res) => {
         if (!existingProvider) {
             return res.status(404).json({ success: false, message: 'Provider not found' });
         }
-        
+
         const validCarTypes = ['Sedan', 'SUV', 'Hatchback', 'Truck', 'Convertible', 'Van'];
         if (!validCarTypes.includes(type)) {
             return res.status(422).json({ success: false, message: `Invalid car type. Choose from: ${validCarTypes.join(', ')}` });
@@ -178,35 +178,45 @@ exports.deleteCar = async (req, res) => {
 
 // @desc    calculate car price
 // @route   POST /api/v1/cars/calculate-price
-// @access  Private
+// @access  Public
 exports.calculateCarPrice = async (req, res) => {
     try {
-        const { carId, numberOfDays, promoId } = req.body;
+        const { carId, startDate, endDate, promoId } = req.body;
 
-        if (!carId || !numberOfDays) {
-            return res.status(400).json({ success: false, message: 'carId and numberOfDays are required' });
+        if (!carId || !startDate || !endDate) {
+            return res.status(400).json({ success: false, message: 'carId, startDate, and endDate are required' });
+        }
+
+        // Calculate number of days
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffInMs = end - start;
+        const numberOfDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+        if (numberOfDays <= 0) {
+            return res.status(400).json({ success: false, message: 'End date must be after start date' });
         }
 
         const car = await Car.findById(carId);
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
         }
-        
+
         const basePrice = car.pricePerDay * numberOfDays;
         let finalPrice = basePrice;
-        
+
         if (promoId) {
             const promotion = await Promotion.findById(promoId);
             if(!promotion){
                 return res.status(404).json({ success: false, message: 'Promotion not found' });
             }
-    
+
             if(promotion.provider){
                 if(promotion.provider.toString() !== car.provider.toString()){
                     return res.status(400).json({ message: "Promotion provider does not match car provider."});
                 }
             }
-            
+
             const now = new Date();
             const isValidPromo = promotion &&
             now >= new Date(promotion.startDate) &&
@@ -228,10 +238,13 @@ exports.calculateCarPrice = async (req, res) => {
             success: true,
             data: {
                 carId: car._id,
+                startDate,
+                endDate,
                 numberOfDays,
                 pricePerDay: car.pricePerDay,
                 basePrice,
-                finalPrice
+                finalPrice,
+                totalPrice: finalPrice // This is what the booking service will use
             }
         });
     } catch (err) {
