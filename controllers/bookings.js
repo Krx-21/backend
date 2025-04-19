@@ -8,7 +8,6 @@ const Promotion = require('../models/Promotion')
 // @access  Private
 exports.getBookings = async (req, res, next) => {
     let query;
-    
 
     if (req.params.carId) {
         if (req.user.role === 'admin') {
@@ -36,9 +35,7 @@ exports.getBookings = async (req, res, next) => {
                 });
             }
             return res.status(200).json({ success: true, count: bookings.length, data: bookings });
-            
-
-            
+                 
         } else {
             query = Booking.find({user: req.user.id, car: req.params.CarId }).populate({
                 path:'car',
