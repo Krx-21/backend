@@ -5,6 +5,8 @@ const bookings = require('./routes/bookings');
 const cars = require('./routes/cars');
 const promotions = require('./routes/promotions')
 const comment = require('./routes/comments');
+const images = require('./routes/images');
+const payments = require('./routes/payments');
 const connectDB = require('./config/db');
 const auth = require('./routes/auth');
 const cookieParser = require('cookie-parser');
@@ -16,26 +18,29 @@ connectDB();
 
 const app = express();
 
-// CORS configuration
 const corsOptions = {
-  origin: 'http://localhost:3000', // Specific frontend origin
-  methods: 'GET, POST, OPTIONS, PUT, DELETE', // Adjust as needed
-  allowedHeaders: 'Content-Type, Authorization', // Adjust as needed
-  credentials: true, // Make sure this is true if you're handling credentials
+  origin: ['http://localhost:3000', 'https://web-project-delta-nine.vercel.app'], 
+  methods: 'GET, POST, OPTIONS, PUT, DELETE',
+  allowedHeaders: 'Content-Type, Authorization',
+  credentials: true, 
+  maxAge: 86400 // 24 hours
 };
 
-// Apply middlewares
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ limit: '20mb', extended: true }));
+
 app.use(cookieParser());
 
-// Routes
 app.use('/api/v1/rentalCarProviders', rentalCarProviders);
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/bookings', bookings);
 app.use('/api/v1/cars', cars);
-app.use('/api/v1/promotions', promotions)
-app.use('/api/v1/comments',comment);
+app.use('/api/v1/promotions', promotions);
+app.use('/api/v1/comments', comment);
+app.use('/api/v1/images', images);
+app.use('/api/v1/payments', payments);
 
 
 const PORT = process.env.PORT || 5000;
