@@ -94,7 +94,7 @@ exports.createCar = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Provider not found' });
         }
         
-        const validCarTypes = ['Sedan', 'SUV', 'Hatchback', 'Truck', 'Convertible', 'Van'];
+        const validCarTypes = ['Sedan', 'SUV', 'Hatchback', 'Truck', 'Convertible', 'Van', 'MPV'];
         if (!validCarTypes.includes(type)) {
             return res.status(422).json({ success: false, message: `Invalid car type. Choose from: ${validCarTypes.join(', ')}` });
         }
