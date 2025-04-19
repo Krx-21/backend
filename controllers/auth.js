@@ -53,7 +53,7 @@ exports.login = async (req, res, next) => {
 // @access  Private
 exports.getMe = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user.id)
+        const user = await User.findById(req.user._id)
         res.status(200).json({ success: true, data: user });
     } catch (err) {
         res.status(500).json({ success: false, message: "Unexpected Error" });
