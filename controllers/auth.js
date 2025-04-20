@@ -7,6 +7,11 @@ const Booking = require('../models/Booking');
 exports.register = async (req, res, next) => {
     try {
         const {name, telephoneNumber, email, password, role} = req.body;
+        
+        if (!name || !telephoneNumber || !email || !password) {
+            return res.status(400).json({success: false, msg: 'Please provide all required fields'});
+        }
+    
         const user = await User.create({
             name,
             telephoneNumber,
@@ -14,6 +19,7 @@ exports.register = async (req, res, next) => {
             password,
             role
         });
+
         sendTokenResponse(user, 200, res);
     } catch (err) {
         res.status(500).json({ success: false, message: "Unexpected Error" });
