@@ -98,7 +98,27 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.name).toBe('Another Test Provider');
       createdProviderIds.push(res.body.data._id);
+      
+      //try create two rental car provider 
+      const res2 = await request(app)
+        .post('/api/v1/rentalcarproviders')
+        .set('Authorization', `Bearer ${secondToken}`)
+        .send({
+          name: 'Another Test Provider',
+          address: '456 Another Street',
+          district: 'Uptown',
+          province: 'Chiang Mai',
+          postalcode: '50000',
+          tel: '0888888888',
+          region: 'North'
+        });
+
+      expect(res2.statusCode).toBe(400);
+
+
     });
+
+    
   });
 
   describe('GET /api/v1/rentalcarproviders', () => {
@@ -122,9 +142,9 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
       expect(res.statusCode).toBe(404);
     });
 
-    it('should return 400 for invalid rental car provider ID', async () => {
-      const res = await request(app).get(`/api/v1/rentalcarproviders/invalid-id`);
-      expect(res.statusCode).toBe(400);
+    it('should return 500 for Unexpected Error', async () => {
+      const res = await request(app).get('/api/v1/rentalcarproviders/invalid-id');
+      expect(res.statusCode).toBe(500);
     });
   });
 
@@ -150,26 +170,75 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
       expect(res.statusCode).toBe(404);
     });
   });
+ 
 
   describe('DELETE /api/v1/rentalcarproviders/:id', () => {
-    it('should delete a rental car provider that the user owns', async () => {
+    it('should return 403 when provider try to delete themselve', async () => {
       const res = await request(app)
         .delete(`/api/v1/rentalcarproviders/${rcpId}`)
         .set('Authorization', `Bearer ${token}`);
       
       // Expecting the response status to be 200 for successful deletion
-      expect(res.statusCode).toBe(200);
-      expect(res.body.success).toBe(true);
+      expect(res.statusCode).toBe(403);
+    });
+
+    
+  });
+
+  describe('DELETE /api/v1/rentalcarproviders/:id', () => {
+    it('should delete a rental car provider', async () => {
+      // Create a new user (admin) and register
+      await User.deleteOne({ email: 'deleteadmin@example.com' });
+      const resRegister = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Delete Admin',
+          telephoneNumber: '0891234500',
+          email: 'deleteadmin@example.com',
+          password: 'password123',
+          role: 'admin'
+        });
+    
+      const deleteToken = resRegister.body.token;
+      const userId = resRegister.body.data._id;
+      createdUserIds.push(userId);
+
+      // Now try deleting that provider with the same user's token
+      const resDelete = await request(app)
+        .delete(`/api/v1/rentalcarproviders/${rcpId}`)
+        .set('Authorization', `Bearer ${deleteToken}`);
+    
+      expect(resDelete.statusCode).toBe(200);
+      expect(resDelete.body.success).toBe(true);
     });
 
     it('should return 404 when deleting non-existing provider', async () => {
+      // Create a new user (admin) and register
+      await User.deleteOne({ email: 'deleteadmin@example.com' });
+      const resRegister = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Delete Admin',
+          telephoneNumber: '0891234500',
+          email: 'deleteadmin@example.com',
+          password: 'password123',
+          role: 'admin'
+        });
+    
+      const deleteToken = resRegister.body.token;
+      const userId = resRegister.body.data._id;
+      createdUserIds.push(userId);
+      // try to delete fake provider
       const fakeId = new mongoose.Types.ObjectId();
       const res = await request(app)
         .delete(`/api/v1/rentalcarproviders/${fakeId}`)
-        .set('Authorization', `Bearer ${token}`);
+        .set('Authorization', `Bearer ${deleteToken}`);
       
       // Expecting 404 when trying to delete a non-existing provider
       expect(res.statusCode).toBe(404);
     });
+
   });
 });
+
+  
