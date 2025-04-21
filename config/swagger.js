@@ -8,16 +8,24 @@ const swaggerOptions = {
     info: {
       title: 'Car Rental API',
       version: '1.0.0',
-      description: 'API documentation for the Car Rental Service',
+      description: 'API documentation for the Car Rental Service. This API provides endpoints for managing car rentals, bookings, users, and payments. The API follows RESTful principles and uses JWT for authentication.',
       contact: {
         name: 'API Support',
         email: 'support@carrentalapi.com'
+      },
+      license: {
+        name: 'MIT License',
+        url: 'https://opensource.org/licenses/MIT'
       }
     },
     servers: [
       {
         url: 'http://localhost:5000/api/v1',
         description: 'Development server'
+      },
+      {
+        url: 'https://api.carrentalservice.com/api/v1',
+        description: 'Production server'
       }
     ],
     components: {
@@ -333,16 +341,27 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Function to setup our docs
 const swaggerDocs = (app) => {
-  // Route for swagger docs
-  app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  // Route for swagger docs with customized options
+  app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'none',
+      filter: true,
+      displayRequestDuration: true
+    }
+  }));
 
-  // Docs in JSON format
-  app.get('/api/v1/docs.json', (req, res) => {
+  // Docs in JSON format for programmatic access
+  app.get('/api/v1/docs.json', (_, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
 
-  console.log(`Swagger docs available at /api/v1/docs`);
+  console.log(`Swagger documentation available at:`);
+  console.log(`- UI: http://localhost:5000/api/v1/docs`);
+  console.log(`- JSON: http://localhost:5000/api/v1/docs.json`);
 };
 
 module.exports = { swaggerDocs };

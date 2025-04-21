@@ -351,6 +351,10 @@
  * /cars/calculate-price:
  *   post:
  *     summary: Calculate car rental price
+ *     description: |
+ *       Calculates the total price for a car rental based on the rental period and optional promotion.
+ *       The calculation includes the base price (price per day × number of days) and any applicable discounts.
+ *       This endpoint is useful for showing price previews before booking.
  *     tags: [Cars]
  *     requestBody:
  *       required: true
@@ -366,17 +370,35 @@
  *               carId:
  *                 type: string
  *                 description: Car ID
+ *                 example: "60d21b4667d0d8992e610c86"
  *               startDate:
  *                 type: string
  *                 format: date-time
- *                 description: Rental start date
+ *                 description: Rental start date (ISO format)
+ *                 example: "2023-06-15T10:00:00.000Z"
  *               endDate:
  *                 type: string
  *                 format: date-time
- *                 description: Rental end date
+ *                 description: Rental end date (ISO format)
+ *                 example: "2023-06-18T10:00:00.000Z"
  *               promoId:
  *                 type: string
  *                 description: Promotion ID (optional)
+ *                 example: "60d21b4667d0d8992e610c95"
+ *           examples:
+ *             basicCalculation:
+ *               summary: Basic price calculation without promotion
+ *               value:
+ *                 carId: "60d21b4667d0d8992e610c86"
+ *                 startDate: "2023-06-15T10:00:00.000Z"
+ *                 endDate: "2023-06-18T10:00:00.000Z"
+ *             withPromotion:
+ *               summary: Price calculation with promotion
+ *               value:
+ *                 carId: "60d21b4667d0d8992e610c86"
+ *                 startDate: "2023-06-15T10:00:00.000Z"
+ *                 endDate: "2023-06-18T10:00:00.000Z"
+ *                 promoId: "60d21b4667d0d8992e610c95"
  *     responses:
  *       200:
  *         description: Price calculation result
@@ -393,38 +415,101 @@
  *                   properties:
  *                     carId:
  *                       type: string
+ *                       example: "60d21b4667d0d8992e610c86"
  *                     numberOfDays:
  *                       type: number
+ *                       example: 3
  *                     pricePerDay:
  *                       type: number
+ *                       example: 1500
  *                     basePrice:
  *                       type: number
+ *                       example: 4500
  *                     finalPrice:
  *                       type: number
+ *                       example: 3600
  *                     discount:
  *                       type: number
+ *                       example: 900
  *                     promoId:
  *                       type: string
+ *                       example: "60d21b4667d0d8992e610c95"
  *                     promoName:
  *                       type: string
+ *                       example: "Summer Discount"
  *                     promoDiscountPercentage:
  *                       type: number
+ *                       example: 20
+ *             examples:
+ *               withoutPromotion:
+ *                 summary: Calculation without promotion
+ *                 value:
+ *                   success: true
+ *                   data:
+ *                     carId: "60d21b4667d0d8992e610c86"
+ *                     numberOfDays: 3
+ *                     pricePerDay: 1500
+ *                     basePrice: 4500
+ *                     finalPrice: 4500
+ *                     discount: 0
+ *               withPromotion:
+ *                 summary: Calculation with promotion
+ *                 value:
+ *                   success: true
+ *                   data:
+ *                     carId: "60d21b4667d0d8992e610c86"
+ *                     numberOfDays: 3
+ *                     pricePerDay: 1500
+ *                     basePrice: 4500
+ *                     finalPrice: 3600
+ *                     discount: 900
+ *                     promoId: "60d21b4667d0d8992e610c95"
+ *                     promoName: "Summer Discount"
+ *                     promoDiscountPercentage: 20
  *       400:
- *         description: Bad request
+ *         description: Bad request - invalid dates or missing required fields
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               invalidDates:
+ *                 summary: Invalid date range
+ *                 value:
+ *                   success: false
+ *                   message: "End date must be after start date"
+ *               missingFields:
+ *                 summary: Missing required fields
+ *                 value:
+ *                   success: false
+ *                   message: "Please provide carId, startDate, and endDate"
  *       404:
  *         description: Car or promotion not found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               carNotFound:
+ *                 summary: Car not found
+ *                 value:
+ *                   success: false
+ *                   message: "Car not found with id 60d21b4667d0d8992e610c86"
+ *               promoNotFound:
+ *                 summary: Promotion not found
+ *                 value:
+ *                   success: false
+ *                   message: "Promotion not found with id 60d21b4667d0d8992e610c95"
  *       500:
  *         description: Server error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               serverError:
+ *                 summary: Unexpected server error
+ *                 value:
+ *                   success: false
+ *                   message: "Error calculating price"
  */
