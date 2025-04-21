@@ -71,7 +71,7 @@ exports.getRentalCarProvider = async (req, res, next) => {
     try {
         const rentalCarProvider = await RentalCarProvider.findById(req.params.id).populate('user')
         if(!rentalCarProvider) {
-            return res.status(400).json({ success: false});
+            return res.status(404).json({ success: false });
         }
 
         res.status(200).json({ success: true, data: rentalCarProvider});
@@ -147,11 +147,22 @@ exports.updateRentalCarProvider = async (req, res, next) => {
 // @access  Private
 exports.deleteRentalCarProvider = async (req, res, next) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'Invalid provider ID' });
+        }
+
         const rentalCarProvider = await RentalCarProvider.findById(req.params.id);
         if (!rentalCarProvider) {
             return res.status(404).json({
                 success: false,
                 message: `Rental car provider not found with id of ${req.params.id}`
+            });
+        }
+
+        if (req.user.role === 'provider' && rentalCarProvider.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'You are not authorized to delete this rental car provider'
             });
         }
         
