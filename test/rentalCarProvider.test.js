@@ -5,7 +5,7 @@ const RentalCarProvider = require('../models/RentalCarProvider');
 const User = require('../models/User');
 
 // 👇 Import the controller function directly for the unit test
-const { createRentalCarProvider } = require('../controllers/rentalCarProviders');
+const { getRentalCarProviders, getRentalCarProvider, createRentalCarProvider, updateRentalCarProvider, deleteRentalCarProvider } = require('../controllers/rentalCarProviders');
 
 describe('Rental Car Provider Routes (CRUD grouped)', () => {
   let token;
@@ -291,7 +291,7 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
     };
     const res = mockRes();
 
-    await require('../controllers/rentalCarProviders').deleteRentalCarProvider(req, res);
+    await deleteRentalCarProvider(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -316,7 +316,7 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
     const RentalCarProvider = require('../models/RentalCarProvider');
     jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(fakeProvider);
 
-    await require('../controllers/rentalCarProviders').deleteRentalCarProvider(req, res);
+    await deleteRentalCarProvider(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
@@ -335,7 +335,7 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
     const RentalCarProvider = require('../models/RentalCarProvider');
     jest.spyOn(RentalCarProvider, 'findById').mockRejectedValue(new Error('DB error'));
 
-    await require('../controllers/rentalCarProviders').deleteRentalCarProvider(req, res);
+    await deleteRentalCarProvider(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
@@ -344,3 +344,199 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
     });
   });
 });
+
+
+
+
+
+
+
+//move the code from rental car provider in controller
+
+
+describe('GET /api/v1/rentalcarproviders - query & pagination handling', () => {
+  const mockRes = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnThis();
+    res.json = jest.fn();
+    return res;
+  };
+
+  afterEach(() => {
+      jest.restoreAllMocks();
+  });
+
+  it('should handle select fields', async () => {
+    const req = {
+      query: { select: 'name,email' }
+    };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnValue(Promise.resolve([{ name: 'Test' }])),
+      populate: jest.fn().mockReturnThis()
+    };
+
+    jest.spyOn(RentalCarProvider, 'find').mockReturnValue(mockQuery);
+    jest.spyOn(RentalCarProvider, 'countDocuments').mockResolvedValue(1);
+
+    await getRentalCarProviders(req, res);
+
+    expect(mockQuery.select).toHaveBeenCalledWith('name email');
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it('should handle sort fields', async () => {
+    const req = {
+      query: { sort: 'createdAt' }
+    };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnValue(Promise.resolve([{ name: 'Sorted' }])),
+      populate: jest.fn().mockReturnThis()
+    };
+
+    jest.spyOn(RentalCarProvider, 'find').mockReturnValue(mockQuery);
+    jest.spyOn(RentalCarProvider, 'countDocuments').mockResolvedValue(1);
+
+    await getRentalCarProviders(req, res);
+
+    expect(mockQuery.sort).toHaveBeenCalledWith('createdAt');
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it('should include next pagination if endIndex < total', async () => {
+    const req = {
+      query: { page: '1', limit: '1' }
+    };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnValue(Promise.resolve([{ name: 'Next page' }])),
+      populate: jest.fn().mockReturnThis()
+    };
+
+    jest.spyOn(RentalCarProvider, 'find').mockReturnValue(mockQuery);
+    jest.spyOn(RentalCarProvider, 'countDocuments').mockResolvedValue(5); // total > limit
+
+    await getRentalCarProviders(req, res);
+
+    expect(res.json.mock.calls[0][0].pagination.next).toEqual({ page: 2, limit: 1 });
+  });
+
+  it('should include prev pagination if startIndex > 0', async () => {
+    const req = {
+      query: { page: '2', limit: '1' }
+    };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnValue(Promise.resolve([{ name: 'Prev page' }])),
+      populate: jest.fn().mockReturnThis()
+    };
+
+    jest.spyOn(RentalCarProvider, 'find').mockReturnValue(mockQuery);
+    jest.spyOn(RentalCarProvider, 'countDocuments').mockResolvedValue(5);
+
+    await getRentalCarProviders(req, res);
+
+    expect(res.json.mock.calls[0][0].pagination.prev).toEqual({ page: 1, limit: 1 });
+  });
+
+  it('should return 500 on unexpected error', async () => {
+    const req = {
+      query: {}
+    };
+    const res = mockRes();
+
+    jest.spyOn(RentalCarProvider, 'find').mockImplementation(() => {
+      throw new Error('Unexpected failure');
+    });
+
+    await getRentalCarProviders(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Unexpected Error'
+    });
+  });
+});
+
+
+
+
+describe('PUT /api/v1/rentalcarproviders/:id - updateRentalCarProvider edge cases', () => {
+  const mockRes = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnThis();
+    res.json = jest.fn();
+    return res;
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should return 403 if provider tries to update someone else\'s profile', async () => {
+    const req = {
+      params: { id: 'fakeId123' },
+      user: { _id: 'provider123', role: 'provider' },
+      body: { name: 'Updated Name' }
+    };
+    const res = mockRes();
+
+    // Simulate a rentalCarProvider with a different user ID
+    const mockProvider = {
+      _id: 'fakeId123',
+      user: 'otherProvider456'
+    };
+
+    jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(mockProvider);
+
+    await updateRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'You are not authorized to update this rental car provider'
+    });
+  });
+
+  it('should return 500 if an unexpected error occurs', async () => {
+    const req = {
+      params: { id: 'someId' },
+      user: { _id: 'user123', role: 'provider' },
+      body: {}
+    };
+    const res = mockRes();
+
+    jest.spyOn(RentalCarProvider, 'findById').mockImplementation(() => {
+      throw new Error('Database crash');
+    });
+
+    await updateRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Unexpected Error'
+    });
+  });
+});
+
+
+
