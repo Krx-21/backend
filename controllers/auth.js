@@ -146,8 +146,6 @@ exports.finishBooking = async (req,res) => {
         if(!booking){
             return res.status(404).json({success: false , message: `no booking with id of ${req.params.bookingId}`});
         }
-        // console.log(booking.user.toString());
-
         if(booking.user.toString() !== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({success: false , message: `User ${req.user.id} is not authorized to finish this booking`});
         }
@@ -157,7 +155,7 @@ exports.finishBooking = async (req,res) => {
             user.bookedCar.push(booking.car);
             await user.save();
         }
-        
+        await booking.deleteOne();
         return res.status(200).json({success: true , data: user});
     }catch (e){
         res.status(500).json({success: false, message: `update booked car fail : ${e}`});

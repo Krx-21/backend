@@ -47,7 +47,7 @@ exports.addComment = async (req,res,next) => {
         const user = await User.findById(req.user.id);
         const booking = await Booking.find({user: req.user.id , car: req.params.carId});
         let bookingIn = false ;
-        booking.array.forEach(book => {
+        booking.forEach(book => {
             if(book.car.toString() === req.params.carId && book.status === 'completed'){
                 bookingIn = true;
             }
