@@ -316,3 +316,65 @@ describe('GET /api/v1/rentalcarproviders - query & pagination handling', () => {
     });
   });
   
+
+
+  
+  describe('PUT /api/v1/rentalcarproviders/:id - updateRentalCarProvider edge cases', () => {
+    const mockRes = () => {
+      const res = {};
+      res.status = jest.fn().mockReturnThis();
+      res.json = jest.fn();
+      return res;
+    };
+  
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+  
+    it('should return 403 if provider tries to update someone else\'s profile', async () => {
+      const req = {
+        params: { id: 'fakeId123' },
+        user: { _id: 'provider123', role: 'provider' },
+        body: { name: 'Updated Name' }
+      };
+      const res = mockRes();
+  
+      // Simulate a rentalCarProvider with a different user ID
+      const mockProvider = {
+        _id: 'fakeId123',
+        user: 'otherProvider456'
+      };
+  
+      jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(mockProvider);
+  
+      await require('../controllers/rentalCarProviders').updateRentalCarProvider(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'You are not authorized to update this rental car provider'
+      });
+    });
+  
+    it('should return 500 if an unexpected error occurs', async () => {
+      const req = {
+        params: { id: 'someId' },
+        user: { _id: 'user123', role: 'provider' },
+        body: {}
+      };
+      const res = mockRes();
+  
+      jest.spyOn(RentalCarProvider, 'findById').mockImplementation(() => {
+        throw new Error('Database crash');
+      });
+  
+      await require('../controllers/rentalCarProviders').updateRentalCarProvider(req, res);
+  
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Unexpected Error'
+      });
+    });
+  });
+  
