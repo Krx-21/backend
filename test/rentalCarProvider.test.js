@@ -4,6 +4,9 @@ const app = require('../app');
 const RentalCarProvider = require('../models/RentalCarProvider');
 const User = require('../models/User');
 
+// 👇 Import the controller function directly for the unit test
+const { createRentalCarProvider } = require('../controllers/rentalCarProviders');
+
 describe('Rental Car Provider Routes (CRUD grouped)', () => {
   let token;
   let rcpId;
@@ -19,7 +22,6 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
   });
 
   beforeEach(async () => {
-    // Register and get token
     await User.deleteOne({ email: 'provider@example.com' });
     const res = await request(app)
       .post('/api/v1/auth/register')
@@ -34,7 +36,6 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
     token = res.body.token;
     createdUserIds.push(res.body.data._id);
 
-    // Create rental car provider
     const rcpRes = await request(app)
       .post('/api/v1/rentalcarproviders')
       .set('Authorization', `Bearer ${token}`)
@@ -66,7 +67,7 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
 
   describe('POST /api/v1/rentalcarproviders', () => {
     it('should create a new rental car provider', async () => {
-      await User.deleteOne({ email: 'secondprovider@example.com'})
+      await User.deleteOne({ email: 'secondprovider@example.com' });
       const resRegister = await request(app)
         .post('/api/v1/auth/register')
         .send({
@@ -76,11 +77,12 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
           password: 'password123',
           role: 'provider'
         });
-      
+
       const secondToken = resRegister.body.token;
       createdUserIds.push(resRegister.body.data._id);
 
       await RentalCarProvider.deleteOne({ name: 'Another Test Provider' });
+
       const res = await request(app)
         .post('/api/v1/rentalcarproviders')
         .set('Authorization', `Bearer ${secondToken}`)
@@ -93,13 +95,12 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
           tel: '0888888888',
           region: 'North'
         });
-      
+
       expect(res.statusCode).toBe(201);
       expect(res.body.success).toBe(true);
       expect(res.body.data.name).toBe('Another Test Provider');
       createdProviderIds.push(res.body.data._id);
-      
-      //try create two rental car provider 
+
       const res2 = await request(app)
         .post('/api/v1/rentalcarproviders')
         .set('Authorization', `Bearer ${secondToken}`)
@@ -114,11 +115,7 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
         });
 
       expect(res2.statusCode).toBe(400);
-
-
     });
-
-    
   });
 
   describe('GET /api/v1/rentalcarproviders', () => {
@@ -170,24 +167,16 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
       expect(res.statusCode).toBe(404);
     });
   });
- 
 
   describe('DELETE /api/v1/rentalcarproviders/:id', () => {
     it('should return 403 when provider try to delete themselve', async () => {
       const res = await request(app)
         .delete(`/api/v1/rentalcarproviders/${rcpId}`)
         .set('Authorization', `Bearer ${token}`);
-      
-      // Expecting the response status to be 200 for successful deletion
       expect(res.statusCode).toBe(403);
     });
 
-    
-  });
-
-  describe('DELETE /api/v1/rentalcarproviders/:id', () => {
     it('should delete a rental car provider', async () => {
-      // Create a new user (admin) and register
       await User.deleteOne({ email: 'deleteadmin@example.com' });
       const resRegister = await request(app)
         .post('/api/v1/auth/register')
@@ -198,22 +187,20 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
           password: 'password123',
           role: 'admin'
         });
-    
+
       const deleteToken = resRegister.body.token;
       const userId = resRegister.body.data._id;
       createdUserIds.push(userId);
 
-      // Now try deleting that provider with the same user's token
       const resDelete = await request(app)
         .delete(`/api/v1/rentalcarproviders/${rcpId}`)
         .set('Authorization', `Bearer ${deleteToken}`);
-    
+
       expect(resDelete.statusCode).toBe(200);
       expect(resDelete.body.success).toBe(true);
     });
 
     it('should return 404 when deleting non-existing provider', async () => {
-      // Create a new user (admin) and register
       await User.deleteOne({ email: 'deleteadmin@example.com' });
       const resRegister = await request(app)
         .post('/api/v1/auth/register')
@@ -224,21 +211,136 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
           password: 'password123',
           role: 'admin'
         });
-    
+
       const deleteToken = resRegister.body.token;
       const userId = resRegister.body.data._id;
       createdUserIds.push(userId);
-      // try to delete fake provider
+
       const fakeId = new mongoose.Types.ObjectId();
       const res = await request(app)
         .delete(`/api/v1/rentalcarproviders/${fakeId}`)
         .set('Authorization', `Bearer ${deleteToken}`);
-      
-      // Expecting 404 when trying to delete a non-existing provider
+
       expect(res.statusCode).toBe(404);
     });
-
   });
 });
 
-  
+
+// ✅ Moved outside of main group to avoid beforeEach() setup
+describe('POST /api/v1/rentalcarproviders - unit tests for edge cases', () => {
+  it('should return 404 if the user is not found', async () => {
+    const req = {
+      user: { _id: '123', id: '123' },
+      body: {}
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn()
+    };
+
+    RentalCarProvider.findOne = jest.fn().mockResolvedValue(null);
+    User.findById = jest.fn().mockResolvedValue(null);
+
+    await createRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: `no user with id of 123`
+    });
+  });
+
+  it('should return 500 if an unexpected error occurs', async () => {
+    const req = {
+      user: { _id: '123', id: '123' },
+      body: {}
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn()
+    };
+
+    RentalCarProvider.findOne = jest.fn().mockRejectedValue(new Error('DB failure'));
+
+    await createRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: "Unexpected Error"
+    });
+  });
+});
+
+
+
+
+describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
+  const mockRes = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnThis();
+    res.json = jest.fn();
+    return res;
+  };
+
+  it('should return 400 if provider ID is invalid', async () => {
+    const req = {
+      params: { id: 'invalid-id' },
+      user: { _id: '123', role: 'admin' }
+    };
+    const res = mockRes();
+
+    await require('../controllers/rentalCarProviders').deleteRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Invalid provider ID'
+    });
+  });
+
+  it('should return 403 if provider tries to delete someone else\'s profile', async () => {
+    const req = {
+      params: { id: '507f191e810c19729de860ea' },
+      user: { _id: '123', role: 'provider' }
+    };
+    const res = mockRes();
+
+    const fakeProvider = {
+      _id: '507f191e810c19729de860ea',
+      user: '456',
+      deleteOne: jest.fn()
+    };
+
+    const RentalCarProvider = require('../models/RentalCarProvider');
+    jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(fakeProvider);
+
+    await require('../controllers/rentalCarProviders').deleteRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'You are not authorized to delete this rental car provider'
+    });
+  });
+
+  it('should return 500 if an unexpected error occurs', async () => {
+    const req = {
+      params: { id: '507f191e810c19729de860ea' },
+      user: { _id: '123', role: 'admin' }
+    };
+    const res = mockRes();
+
+    const RentalCarProvider = require('../models/RentalCarProvider');
+    jest.spyOn(RentalCarProvider, 'findById').mockRejectedValue(new Error('DB error'));
+
+    await require('../controllers/rentalCarProviders').deleteRentalCarProvider(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Unexpected Error'
+    });
+  });
+});
