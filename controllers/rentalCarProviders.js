@@ -203,7 +203,7 @@ describe('GET /api/v1/rentalcarproviders - query & pagination handling', () => {
     };
   
     afterEach(() => {
-      jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
   
     it('should handle select fields', async () => {
