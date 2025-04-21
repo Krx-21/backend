@@ -6,6 +6,8 @@ const cars = require('./routes/cars');
 const promotions = require('./routes/promotions');
 const comment = require('./routes/comments');
 const auth = require('./routes/auth');
+const images = require('./routes/images');
+const payments = require('./routes/payments');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { swaggerDocs } = require('./config/swagger');
@@ -34,6 +36,8 @@ app.use('/api/v1/bookings', bookings);
 app.use('/api/v1/cars', cars);
 app.use('/api/v1/promotions', promotions);
 app.use('/api/v1/comments', comment);
+app.use('/api/v1/images', images);
+app.use('/api/v1/payments', payments);
 
 // Setup Swagger documentation
 swaggerDocs(app);
