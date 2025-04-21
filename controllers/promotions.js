@@ -168,7 +168,7 @@ exports.updatePromotion = async (req, res, next) => {
                 return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
             }
 
-            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.user.toString()) {
+            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.id.toString()) {
                 return res.status(403).json({ success: false, message: `You are not authorized to update this promotion.` });
             }
 
@@ -215,7 +215,7 @@ exports.deletePromotion = async (req, res, next) => {
                 return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
             }
 
-            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.user.toString()) {
+            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.id.toString()) {
                 return res.status(403).json({ success: false, message: `You are not authorized to delete this promotion.` });
             }
 
