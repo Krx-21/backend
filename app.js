@@ -8,6 +8,7 @@ const comment = require('./routes/comments');
 const auth = require('./routes/auth');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const { swaggerDocs } = require('./config/swagger');
 
 // Load env vars
 dotenv.config({ path: 'config/config.env' });
@@ -33,5 +34,8 @@ app.use('/api/v1/bookings', bookings);
 app.use('/api/v1/cars', cars);
 app.use('/api/v1/promotions', promotions);
 app.use('/api/v1/comments', comment);
+
+// Setup Swagger documentation
+swaggerDocs(app);
 
 module.exports = app;
