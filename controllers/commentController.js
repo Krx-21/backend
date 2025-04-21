@@ -1,6 +1,7 @@
 const Comment = require('../models/Comment');
 const Car = require('../models/Car');
 const User = require('../models/User');
+const Booking = require('../models/Booking');
 
 // @desc    Get all comments
 // @route   GET /api/v1/comments
@@ -44,10 +45,17 @@ exports.addComment = async (req,res,next) => {
             });
         }
         const user = await User.findById(req.user.id);
-        if(!user.bookedCar.includes(req.params.carId) && user.role !== 'admin'){
+        const booking = await Booking.find({user: req.user.id , car: req.params.carId});
+        let bookingIn = false ;
+        booking.array.forEach(book => {
+            if(book.car.toString() === req.params.carId && book.status === 'completed'){
+                bookingIn = true;
+            }
+        });
+        if( !bookingIn && !user.bookedCar.includes(req.params.carId) && user.role !== 'admin'){
             return res.status(400).json({
                 success: false,
-                message: `comment fail`
+                message: `you cant commment to this car`
             });
         }
         req.body.user = req.user.id;
@@ -103,7 +111,7 @@ exports.deleteComment = async (req,res,next) =>{
                 message: `no Comment with the id of ${req.params.id}`
             });
         }
-
+ 
         if(comment.user.toString() !== req.user.id && req.user.role !== 'admin'){
             return res.status(401).json({
                 success: false,
