@@ -49,7 +49,7 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
         region: 'Central',
         user: res.body.data._id
       });
-
+    console.log('CREATE RESPONSE:', JSON.stringify(rcpRes.body, null, 2));
     rcpId = rcpRes.body.data._id;
     createdProviderIds.push(rcpId);
   });
@@ -537,6 +537,9 @@ describe('PUT /api/v1/rentalcarproviders/:id - updateRentalCarProvider edge case
     });
   });
 });
+
+
+
 
 
 

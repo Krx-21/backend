@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1745251034824" clover="3.2.0">
-  <project timestamp="1745251034824" name="All files">
-    <metrics statements="757" coveredstatements="330" conditionals="330" coveredconditionals="56" methods="51" coveredmethods="19" elements="1138" coveredelements="405" complexity="0" loc="757" ncloc="757" packages="6" files="25" classes="25"/>
+<coverage generated="1745297194335" clover="3.2.0">
+  <project timestamp="1745297194336" name="All files">
+    <metrics statements="757" coveredstatements="330" conditionals="330" coveredconditionals="56" methods="51" coveredmethods="20" elements="1138" coveredelements="406" complexity="0" loc="757" ncloc="757" packages="6" files="25" classes="25"/>
     <package name="backend">
       <metrics statements="30" coveredstatements="30" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="app.js" path="D:\Rent-A-Ride\backend\app.js">
@@ -58,7 +58,7 @@
       </file>
     </package>
     <package name="backend.controllers">
-      <metrics statements="594" coveredstatements="172" conditionals="318" coveredconditionals="46" methods="43" coveredmethods="12"/>
+      <metrics statements="594" coveredstatements="172" conditionals="318" coveredconditionals="46" methods="43" coveredmethods="13"/>
       <file name="auth.js" path="D:\Rent-A-Ride\backend\controllers\auth.js">
         <metrics statements="76" coveredstatements="38" conditionals="34" coveredconditionals="14" methods="8" coveredmethods="6"/>
         <line num="1" count="2" type="stmt"/>
@@ -578,22 +578,22 @@
         <line num="239" count="0" type="stmt"/>
       </file>
       <file name="rentalCarProviders.js" path="D:\Rent-A-Ride\backend\controllers\rentalCarProviders.js">
-        <metrics statements="97" coveredstatements="97" conditionals="32" coveredconditionals="32" methods="8" coveredmethods="6"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="2" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="4" count="2" type="stmt"/>
-        <line num="5" count="2" type="stmt"/>
-        <line num="6" count="2" type="stmt"/>
-        <line num="11" count="2" type="stmt"/>
-        <line num="12" count="6" type="stmt"/>
-        <line num="15" count="6" type="stmt"/>
-        <line num="16" count="6" type="stmt"/>
-        <line num="17" count="24" type="stmt"/>
-        <line num="18" count="6" type="stmt"/>
-        <line num="20" count="6" type="stmt"/>
-        <line num="21" count="6" type="stmt"/>
-        <line num="22" count="6" type="stmt"/>
+        <metrics statements="97" coveredstatements="97" conditionals="32" coveredconditionals="32" methods="8" coveredmethods="7"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="2" count="4" type="stmt"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="4" count="4" type="stmt"/>
+        <line num="5" count="4" type="stmt"/>
+        <line num="6" count="4" type="stmt"/>
+        <line num="11" count="4" type="stmt"/>
+        <line num="12" count="8" type="stmt"/>
+        <line num="15" count="8" type="stmt"/>
+        <line num="16" count="8" type="stmt"/>
+        <line num="17" count="32" type="stmt"/>
+        <line num="18" count="8" type="stmt"/>
+        <line num="20" count="8" type="stmt"/>
+        <line num="21" count="8" type="stmt"/>
+        <line num="22" count="8" type="stmt"/>
         <line num="26" count="5" type="cond" truecount="2" falsecount="0"/>
         <line num="27" count="1" type="stmt"/>
         <line num="28" count="1" type="stmt"/>
@@ -614,19 +614,19 @@
         <line num="54" count="5" type="cond" truecount="2" falsecount="0"/>
         <line num="55" count="1" type="stmt"/>
         <line num="61" count="5" type="stmt"/>
-        <line num="63" count="1" type="stmt"/>
-        <line num="64" count="1" type="stmt"/>
-        <line num="71" count="2" type="stmt"/>
-        <line num="72" count="3" type="stmt"/>
-        <line num="73" count="3" type="stmt"/>
-        <line num="74" count="2" type="cond" truecount="2" falsecount="0"/>
-        <line num="75" count="1" type="stmt"/>
-        <line num="78" count="1" type="stmt"/>
-        <line num="80" count="1" type="stmt"/>
-        <line num="81" count="1" type="stmt"/>
-        <line num="89" count="2" type="stmt"/>
-        <line num="90" count="14" type="stmt"/>
-        <line num="91" count="14" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="64" count="3" type="stmt"/>
+        <line num="71" count="4" type="stmt"/>
+        <line num="72" count="7" type="stmt"/>
+        <line num="73" count="7" type="stmt"/>
+        <line num="74" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="75" count="2" type="stmt"/>
+        <line num="78" count="2" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="81" count="3" type="stmt"/>
+        <line num="89" count="4" type="stmt"/>
+        <line num="90" count="16" type="stmt"/>
+        <line num="91" count="16" type="stmt"/>
         <line num="92" count="13" type="cond" truecount="2" falsecount="0"/>
         <line num="93" count="1" type="stmt"/>
         <line num="98" count="12" type="stmt"/>
@@ -637,45 +637,45 @@
         <line num="108" count="11" type="stmt"/>
         <line num="109" count="11" type="stmt"/>
         <line num="110" count="11" type="stmt"/>
-        <line num="112" count="1" type="stmt"/>
-        <line num="113" count="1" type="stmt"/>
-        <line num="121" count="2" type="stmt"/>
-        <line num="122" count="4" type="stmt"/>
-        <line num="123" count="4" type="stmt"/>
+        <line num="112" count="3" type="stmt"/>
+        <line num="113" count="3" type="stmt"/>
+        <line num="121" count="4" type="stmt"/>
+        <line num="122" count="5" type="stmt"/>
+        <line num="123" count="5" type="stmt"/>
         <line num="124" count="3" type="cond" truecount="2" falsecount="0"/>
         <line num="125" count="1" type="stmt"/>
         <line num="128" count="2" type="cond" truecount="4" falsecount="0"/>
         <line num="129" count="1" type="stmt"/>
         <line num="135" count="1" type="stmt"/>
         <line num="140" count="1" type="stmt"/>
-        <line num="142" count="1" type="stmt"/>
-        <line num="143" count="1" type="stmt"/>
-        <line num="150" count="2" type="stmt"/>
-        <line num="151" count="5" type="stmt"/>
-        <line num="152" count="5" type="cond" truecount="2" falsecount="0"/>
-        <line num="153" count="1" type="stmt"/>
-        <line num="156" count="4" type="stmt"/>
-        <line num="157" count="3" type="stmt"/>
-        <line num="158" count="3" type="stmt"/>
-        <line num="159" count="3" type="stmt"/>
-        <line num="160" count="3" type="cond" truecount="2" falsecount="0"/>
-        <line num="161" count="1" type="stmt"/>
-        <line num="168" count="2" type="stmt"/>
-        <line num="169" count="2" type="stmt"/>
-        <line num="170" count="2" type="stmt"/>
-        <line num="171" count="2" type="stmt"/>
-        <line num="172" count="2" type="stmt"/>
-        <line num="173" count="2" type="cond" truecount="4" falsecount="0"/>
-        <line num="174" count="1" type="stmt"/>
-        <line num="180" count="1" type="stmt"/>
-        <line num="181" count="1" type="stmt"/>
-        <line num="182" count="1" type="stmt"/>
-        <line num="183" count="1" type="stmt"/>
-        <line num="184" count="1" type="stmt"/>
-        <line num="185" count="1" type="stmt"/>
-        <line num="187" count="1" type="stmt"/>
-        <line num="189" count="1" type="stmt"/>
-        <line num="190" count="1" type="stmt"/>
+        <line num="142" count="2" type="stmt"/>
+        <line num="143" count="2" type="stmt"/>
+        <line num="150" count="4" type="stmt"/>
+        <line num="151" count="11" type="stmt"/>
+        <line num="152" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="153" count="2" type="stmt"/>
+        <line num="156" count="9" type="stmt"/>
+        <line num="157" count="7" type="stmt"/>
+        <line num="158" count="7" type="stmt"/>
+        <line num="159" count="7" type="stmt"/>
+        <line num="160" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="161" count="2" type="stmt"/>
+        <line num="168" count="5" type="stmt"/>
+        <line num="169" count="5" type="stmt"/>
+        <line num="170" count="5" type="stmt"/>
+        <line num="171" count="5" type="stmt"/>
+        <line num="172" count="5" type="stmt"/>
+        <line num="173" count="5" type="cond" truecount="4" falsecount="0"/>
+        <line num="174" count="2" type="stmt"/>
+        <line num="180" count="3" type="stmt"/>
+        <line num="181" count="3" type="stmt"/>
+        <line num="182" count="3" type="stmt"/>
+        <line num="183" count="3" type="stmt"/>
+        <line num="184" count="3" type="stmt"/>
+        <line num="185" count="3" type="stmt"/>
+        <line num="187" count="3" type="stmt"/>
+        <line num="189" count="2" type="stmt"/>
+        <line num="190" count="2" type="stmt"/>
       </file>
     </package>
     <package name="backend.middleware">
@@ -707,21 +707,21 @@
       <metrics statements="31" coveredstatements="31" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
       <file name="Booking.js" path="D:\Rent-A-Ride\backend\models\Booking.js">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="37" count="2" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="37" count="4" type="stmt"/>
       </file>
       <file name="Car.js" path="D:\Rent-A-Ride\backend\models\Car.js">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="69" count="2" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="69" count="4" type="stmt"/>
       </file>
       <file name="Comment.js" path="D:\Rent-A-Ride\backend\models\Comment.js">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="30" count="2" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
       </file>
       <file name="Promotion.js" path="D:\Rent-A-Ride\backend\models\Promotion.js">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
@@ -731,28 +731,28 @@
       </file>
       <file name="RentalCarProvider.js" path="D:\Rent-A-Ride\backend\models\RentalCarProvider.js">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="47" count="2" type="stmt"/>
-        <line num="54" count="2" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="47" count="4" type="stmt"/>
+        <line num="54" count="4" type="stmt"/>
       </file>
       <file name="User.js" path="D:\Rent-A-Ride\backend\models\User.js">
         <metrics statements="15" coveredstatements="15" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="2" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="5" count="2" type="stmt"/>
-        <line num="53" count="2" type="stmt"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="2" count="4" type="stmt"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="5" count="4" type="stmt"/>
+        <line num="53" count="4" type="stmt"/>
         <line num="54" count="32" type="cond" truecount="2" falsecount="0"/>
         <line num="55" count="11" type="stmt"/>
         <line num="57" count="21" type="stmt"/>
         <line num="58" count="21" type="stmt"/>
         <line num="59" count="21" type="stmt"/>
-        <line num="62" count="2" type="stmt"/>
+        <line num="62" count="4" type="stmt"/>
         <line num="63" count="22" type="stmt"/>
-        <line num="68" count="2" type="stmt"/>
+        <line num="68" count="4" type="stmt"/>
         <line num="69" count="2" type="stmt"/>
-        <line num="72" count="2" type="stmt"/>
+        <line num="72" count="4" type="stmt"/>
       </file>
     </package>
     <package name="backend.routes">
