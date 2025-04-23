@@ -21,62 +21,7 @@ describe('Promotions Controller', () => {
       jest.restoreAllMocks();
     });
   
-    describe('getPromotions', () => {
-      it('should return all promotions with pagination', async () => {
-        const req = { query: {}, params: {} };
-        const res = mockRes();
-  
-        // Create a fully chainable mock query
-        const mockQuery = {
-          select: jest.fn().mockReturnThis(),
-          sort: jest.fn().mockReturnThis(),
-          skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockResolvedValue([{ title: 'Promo 1' }, { title: 'Promo 2' }])
-        };
-  
-        jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
-        jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(2);
-  
-        await getPromotions(req, res);
-  
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-          success: true,
-          count: 2,
-          pagination: {},
-          data: [{ title: 'Promo 1' }, { title: 'Promo 2' }]
-        });
-      });
-  
-      it('should return 500 if an error occurs', async () => {
-        const req = { query: {}, params: {} };
-        const res = mockRes();
-  
-        // Mock countDocuments (called before .skip/.limit())
-        jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(100);
-  
-        // This simulates the final awaited `query.skip().limit()` throwing an error
-        const mockQuery = {
-          select: jest.fn().mockReturnThis(),
-          sort: jest.fn().mockReturnThis(),
-          skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockImplementation(() => {
-            return Promise.reject(new Error('Unexpected Error'));
-          }),
-        };
-  
-        jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
-  
-        await getPromotions(req, res);
-  
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-          success: false,
-          message: 'Unexpected Error',
-        });
-      });
-    });
-
+    
     describe('getPromotion', () => {
         it('should return a single promotion', async () => {
           const req = { params: { id: '507f191e810c19729de860ea' } };
@@ -330,6 +275,76 @@ describe('Promotions Controller', () => {
         success: false,
         message: 'Promotion not found',
       });
+    });
+  });
+});
+
+
+
+
+describe('getPromotions', () => {
+  const mockRes = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnThis();
+    res.json = jest.fn();
+    return res;
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  it('should return all promotions with pagination', async () => {
+    const req = { query: {}, params: {} };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockResolvedValue([{ title: 'Promo 1' }, { title: 'Promo 2' }]),
+    };
+
+    jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
+    jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(2);
+
+    await getPromotions(req, res);
+
+    expect(mockQuery.populate).toHaveBeenCalledWith({ path: 'provider' });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      count: 2,
+      pagination: {},
+      data: [{ title: 'Promo 1' }, { title: 'Promo 2' }],
+    });
+  });
+
+  it('should return 500 if an error occurs', async () => {
+    const req = { query: {}, params: {} };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockImplementation(() => {
+        throw new Error('Unexpected Error');
+      }),
+    };
+
+    jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
+
+    await getPromotions(req, res);
+
+    expect(mockQuery.populate).toHaveBeenCalledWith({ path: 'provider' });
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Unexpected Error',
     });
   });
 });
