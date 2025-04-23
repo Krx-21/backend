@@ -37,7 +37,9 @@ exports.getPromotions = async (req, res, next) => {
     try {
         const total = await Promotion.countDocuments();
         query = query.skip(startIndex).limit(limit);
-        const promotions = await query;
+        const promotions = await query.populate({
+            path: "provider"
+        });
         console.log(promotions)
         const pagination = {};
         if (endIndex < total) {
