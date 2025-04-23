@@ -52,11 +52,17 @@ describe('Promotions Controller', () => {
         const req = { query: {}, params: {} };
         const res = mockRes();
   
+        // Mock countDocuments (called before .skip/.limit())
+        jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(100);
+  
+        // This simulates the final awaited `query.skip().limit()` throwing an error
         const mockQuery = {
           select: jest.fn().mockReturnThis(),
           sort: jest.fn().mockReturnThis(),
           skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockRejectedValue(new Error('Unexpected Error'))
+          limit: jest.fn().mockImplementation(() => {
+            return Promise.reject(new Error('Unexpected Error'));
+          }),
         };
   
         jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
