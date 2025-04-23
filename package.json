@@ -28,11 +28,13 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.1",
     "newman": "^6.2.1",
+    "swagger": "^0.7.5",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.1.4",
     "nodemon": "^3.1.9",
     "supertest": "^7.1.0"
   }

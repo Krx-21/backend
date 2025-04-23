@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Booking = require('../models/Booking'); 
 const Car = require('../models/Car');
 const RentalCarProvider = require('../models/RentalCarProvider'); 
@@ -76,8 +77,9 @@ exports.getRentalCarProvider = async (req, res, next) => {
 
         res.status(200).json({ success: true, data: rentalCarProvider});
     } catch(err) {
+        console.log("Error:", err); 
         res.status(500).json({ success: false, message: "Unexpected Error" });
-        console.log(err);
+        //console.log(err);
     }
 };
 
@@ -152,6 +154,9 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
         }
 
         const rentalCarProvider = await RentalCarProvider.findById(req.params.id);
+        console.log('Hi');
+        console.log('[DEBUG] fetched rentalCarProvider:', rentalCarProvider); // ADD THIS
+        console.log('End');
         if (!rentalCarProvider) {
             return res.status(404).json({
                 success: false,
@@ -159,6 +164,12 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
             });
         }
 
+         // 🔍 Add your debug logs here
+         console.log('[DEBUG] rentalCarProvider.user:', rentalCarProvider.user?.toString());
+         console.log('[DEBUG] req.user._id:', req.user?._id?.toString());
+         console.log('[DEBUG] Equal?:', rentalCarProvider.user?.toString() === req.user?._id?.toString());
+         console.log('[DEBUG] Type of rentalCarProvider.user:', typeof rentalCarProvider.user);
+         console.log('[DEBUG] Type of req.user._id:', typeof req.user._id);
         if (req.user.role === 'provider' && rentalCarProvider.user.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -179,3 +190,6 @@ exports.deleteRentalCarProvider = async (req, res, next) => {
         console.log(err);
     }
 };
+
+
+
