@@ -221,7 +221,7 @@ describe('createPromotion', () => {
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `RentalCarProvider not found for user nonExistentProviderId`,
+      message: `RentalCarProvider not found with ID nonExistentProviderId`,
     });
   });
 
@@ -486,7 +486,7 @@ describe('updatePromotion', () => {
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `RentalCarProvider not found for user nonExistentProviderId`,
+      message: `RentalCarProvider not found with ID nonExistentProviderId`, // Updated message
     });
   });
 
@@ -630,7 +630,7 @@ describe('deletePromotion', () => {
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `RentalCarProvider not found for user nonExistentProviderId`,
+      message: `RentalCarProvider not found with ID nonExistentProviderId`, // Updated message
     });
   });
 
