@@ -93,7 +93,7 @@ exports.createCar = async (req, res) => {
         if (!existingProvider) {
             return res.status(404).json({ success: false, message: 'Provider not found' });
         }
-        
+
         const validCarTypes = ['Sedan', 'SUV', 'Hatchback', 'Truck', 'Convertible', 'Van', 'MPV'];
         if (!validCarTypes.includes(type)) {
             return res.status(422).json({ success: false, message: `Invalid car type. Choose from: ${validCarTypes.join(', ')}` });
@@ -191,22 +191,22 @@ exports.calculateCarPrice = async (req, res) => {
         if (!car) {
             return res.status(404).json({ success: false, message: 'Car not found' });
         }
-        
+
         const basePrice = car.pricePerDay * numberOfDays;
         let finalPrice = basePrice;
-        
+
         if (promoId) {
             const promotion = await Promotion.findById(promoId);
             if(!promotion){
                 return res.status(404).json({ success: false, message: 'Promotion not found' });
             }
-    
+
             if(promotion.provider){
                 if(promotion.provider.toString() !== car.provider.toString()){
                     return res.status(400).json({ message: "Promotion provider does not match car provider."});
                 }
             }
-            
+
             const now = new Date();
             const isValidPromo = promotion &&
             now >= new Date(promotion.startDate) &&
@@ -224,15 +224,43 @@ exports.calculateCarPrice = async (req, res) => {
             }
         }
 
+        // Prepare response data
+        const responseData = {
+            carId: car._id,
+            numberOfDays,
+            pricePerDay: car.pricePerDay,
+            basePrice,
+            finalPrice
+        };
+
+        // Add promotion details if a valid promotion was applied
+        if (promoId) {
+            const promotion = await Promotion.findById(promoId);
+            if (promotion) {
+                responseData.promoId = promotion._id;
+                responseData.promoName = promotion.title;
+                responseData.promoDiscountPercentage = promotion.discountPercentage;
+
+                // Only add discount if it was actually applied
+                const now = new Date();
+                const isValidPromo =
+                    now >= new Date(promotion.startDate) &&
+                    now <= new Date(promotion.endDate) &&
+                    basePrice >= promotion.minPurchaseAmount &&
+                    promotion.amount > 0;
+
+                if (isValidPromo) {
+                    responseData.discount = Math.min(
+                        (promotion.discountPercentage / 100) * basePrice,
+                        promotion.maxDiscountAmount
+                    );
+                }
+            }
+        }
+
         res.status(200).json({
             success: true,
-            data: {
-                carId: car._id,
-                numberOfDays,
-                pricePerDay: car.pricePerDay,
-                basePrice,
-                finalPrice
-            }
+            data: responseData
         });
     } catch (err) {
         console.error(err);
