@@ -6,6 +6,9 @@ const Car = require('../models/Car');
 const Comment = require('../models/Comment');
 const RentalCarProvider = require('../models/RentalCarProvider');
 
+const Booking = require('../models/Booking'); 
+jest.mock('../models/Booking'); 
+
 describe('Comment Routes', () => {
   let userToken;
   const createdIds = { users: [], providers: [], cars: [], comments: [] };
@@ -91,6 +94,10 @@ describe('Comment Routes', () => {
   });
 
   it('should create a comment by a user', async () => {
+    Booking.find.mockResolvedValue([
+      { car: createdIds.cars[0], status: 'completed' }
+    ]);
+  
     const res = await request(app)
       .post('/api/v1/comments')
       .set('Authorization', `Bearer ${userToken}`)
@@ -99,7 +106,7 @@ describe('Comment Routes', () => {
         comment: 'Great experience!',
         rating: 4
       });
-
+  
     expect(res.statusCode).toBe(201);
     expect(res.body.success).toBe(true);
     createdIds.comments.push(res.body.data._id);
@@ -159,17 +166,19 @@ describe('Comment Routes', () => {
     });
 
     const res = await request(app)
-      .get(`/api/v1/comments/${createdIds.cars[0]}`);
+      .get(`/api/v1/cars/${createdIds.cars[0]}/comments/`);
 
-    expect(res.statusCode).toBe(200);
+    expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.count).toBeGreaterThanOrEqual(2);
   });
 
   it('should return 404 for non-existent car when getting comments', async () => {
-    const res = await request(app)
-      .get(`/api/v1/comments/605c39f2f13f060015d9a89a`);
+    const nonExistentCarId = new mongoose.Types.ObjectId(); 
 
+    const res = await request(app)
+      .get(`/api/v1/cars/${nonExistentCarId}/comments`);
+  
     expect(res.statusCode).toBe(404);
     expect(res.body.success).toBe(false);
   });

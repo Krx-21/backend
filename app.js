@@ -10,12 +10,12 @@ const images = require('./routes/images');
 const payments = require('./routes/payments');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const { swaggerDocs } = require('./config/swagger');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const {xss} = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
+
 // Load env vars
 dotenv.config({ path: 'config/config.env' });
 
@@ -23,7 +23,7 @@ const app = express();
 
 // CORS config
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: 'https://web-project-delta-nine.vercel.app',
   methods: 'GET, POST, OPTIONS, PUT, DELETE',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
@@ -54,6 +54,6 @@ app.use('/api/v1/images', images);
 app.use('/api/v1/payments', payments);
 
 // Setup Swagger documentation
-swaggerDocs(app);
+//swaggerDocs(app);
 
 module.exports = app;

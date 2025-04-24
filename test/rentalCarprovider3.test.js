@@ -224,7 +224,7 @@ describe('POST /api/v1/rentalcarproviders - missing required fields', () => {
   it('should return 400 if required fields are missing', async () => {
     const req = {
       user: { _id: '123', id: '123' },
-      body: {} // Missing required fields
+      body: {} 
     };
     const res = mockRes();
 
@@ -234,7 +234,7 @@ describe('POST /api/v1/rentalcarproviders - missing required fields', () => {
 
     await createRentalCarProvider(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(500); // Adjust if your code handles validation differently
+    expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: 'Unexpected Error'
@@ -264,13 +264,13 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unauthorized deletion', () => 
   it('should return 403 if user is not authorized to delete the provider', async () => {
     const req = {
       params: { id: '507f191e810c19729de860ea' },
-      user: { _id: '123', role: 'provider' } // Not an admin
+      user: { _id: '123', role: 'provider' } 
     };
     const res = mockRes();
 
     const mockProvider = {
       _id: '507f191e810c19729de860ea',
-      user: '456', // Different user
+      user: '456', 
       deleteOne: jest.fn()
     };
 
