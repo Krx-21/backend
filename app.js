@@ -19,7 +19,7 @@ const app = express();
 
 // CORS config
 const corsOptions = {
-  origin: 'https://web-project-delta-nine.vercel.app/',
+  origin: 'https://web-project-delta-nine.vercel.app',
   methods: 'GET, POST, OPTIONS, PUT, DELETE',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
