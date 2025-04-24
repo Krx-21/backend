@@ -521,3 +521,114 @@ describe('Cars Controller', () => {
   });
 });
 
+
+describe('getCars', () => {
+    const mockRes = () => {
+      const res = {};
+      res.status = jest.fn().mockReturnThis();
+      res.json = jest.fn();
+      return res;
+    };
+  
+    const setupCarFindMock = (cars) => {
+      const mockQuery = {
+        populate: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnValue(Promise.resolve(cars)),
+      };
+      jest.spyOn(Car, 'find').mockReturnValue(mockQuery);
+      return mockQuery;
+    };
+  
+    afterEach(() => {
+      jest.clearAllMocks();
+      jest.restoreAllMocks();
+    });
+  
+    it('should return all cars for a specific provider', async () => {
+      const req = { params: { providerId: 'provider123' }, query: {} };
+      const res = mockRes();
+      const mockCars = [{ brand: 'Toyota' }, { brand: 'Honda' }];
+  
+      setupCarFindMock(mockCars);
+      jest.spyOn(Car, 'countDocuments').mockResolvedValue(2);
+  
+      await getCars(req, res);
+  
+      expect(Car.find).toHaveBeenCalledWith({ provider: 'provider123' });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        count: 2,
+        pagination: {},
+        data: mockCars,
+      });
+    });
+  
+    it('should return all cars with selected fields', async () => {
+      const req = { params: {}, query: { select: 'brand,model' } };
+      const res = mockRes();
+      const mockCars = [{ brand: 'Toyota', model: 'Corolla' }];
+  
+      setupCarFindMock(mockCars);
+      jest.spyOn(Car, 'countDocuments').mockResolvedValue(1);
+  
+      await getCars(req, res);
+  
+      expect(Car.find).toHaveBeenCalledWith({});
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        count: 1,
+        pagination: {},
+        data: mockCars,
+      });
+    });
+  
+    it('should return all cars sorted by a specific field', async () => {
+      const req = { params: {}, query: { sort: 'brand' } };
+      const res = mockRes();
+      const mockCars = [{ brand: 'Honda' }, { brand: 'Toyota' }];
+  
+      setupCarFindMock(mockCars);
+      jest.spyOn(Car, 'countDocuments').mockResolvedValue(2);
+  
+      await getCars(req, res);
+  
+      expect(Car.find).toHaveBeenCalledWith({});
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        count: 2,
+        pagination: {},
+        data: mockCars,
+      });
+    });
+  
+    it('should return paginated cars', async () => {
+      const req = { params: {}, query: { page: '2', limit: '1' } };
+      const res = mockRes();
+      const mockCars = [{ brand: 'Toyota' }];
+  
+      setupCarFindMock(mockCars);
+      jest.spyOn(Car, 'countDocuments').mockResolvedValue(2);
+  
+      await getCars(req, res);
+  
+      expect(Car.find).toHaveBeenCalledWith({});
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        count: 1,
+        pagination: {
+          prev: { page: 1, limit: 1 },
+        },
+        data: mockCars,
+      });
+    });
+  
+    
+  });
+  
