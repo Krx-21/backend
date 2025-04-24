@@ -196,20 +196,44 @@ describe('Promotions Controller', () => {
       const req = {
         params: { id: '507f191e810c19729de860ea' },
         user: { role: 'admin', _id: '507f191e810c19729de860ea' },
-        body: { title: 'Updated Promo' },
+        body: { title: 'Updated Promo', provider: 'provider123' },
       };
       const res = mockRes();
 
-      jest.spyOn(Promotion, 'findById').mockResolvedValue({ title: 'Promo 1' });
+      // Mock Promotion.findById to return a valid promotion
+      const mockPromotion = { _id: '507f191e810c19729de860ea', provider: 'provider123' };
+      jest.spyOn(Promotion, 'findById').mockResolvedValue(mockPromotion);
+
+      // Mock RentalCarProvider.findById to return a valid provider
+      const mockProvider = { _id: 'provider123' };
+      jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(mockProvider);
+
+      // Mock Promotion.findByIdAndUpdate to simulate successful update
       jest.spyOn(Promotion, 'findByIdAndUpdate').mockResolvedValue({ title: 'Updated Promo' });
+
+      // Spy on console.log
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await updatePromotion(req, res);
 
+      expect(Promotion.findById).toHaveBeenCalledWith('507f191e810c19729de860ea');
+      expect(RentalCarProvider.findById).toHaveBeenCalledWith('provider123');
+      expect(Promotion.findByIdAndUpdate).toHaveBeenCalledWith(
+        '507f191e810c19729de860ea',
+        req.body,
+        { new: true, runValidators: true }
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: { title: 'Updated Promo' },
       });
+
+      // Verify console.log was called with the expected message
+      expect(consoleLogSpy).toHaveBeenCalledWith('Admin updating promotion for provider:', mockProvider);
+
+      // Restore console.log
+      consoleLogSpy.mockRestore();
     });
 
     it('should return 404 if promotion is not found', async () => {
