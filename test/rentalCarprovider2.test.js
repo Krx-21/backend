@@ -1,7 +1,6 @@
 const { getRentalCarProvider } = require('../controllers/rentalCarProviders');
-const RentalCarProvider = require('../models/RentalCarProvider'); // adjust if needed
-
-jest.mock('../models/RentalCarProvider'); // Mock the model
+const RentalCarProvider = require('../models/RentalCarProvider'); 
+jest.mock('../models/RentalCarProvider'); 
 
 describe('GET /api/v1/rentalcarproviders/:id', () => {
   const mockRes = () => {

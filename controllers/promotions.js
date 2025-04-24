@@ -9,7 +9,7 @@ exports.getPromotions = async (req, res, next) => {
     const reqQuery = { ...req.query };
     const removeFields = ['select', 'sort', 'page', 'limit'];
     removeFields.forEach(param => delete reqQuery[param]);
-    
+
     if (req.params.providerId) {
         reqQuery.provider = req.params.providerId;
     }
@@ -17,19 +17,19 @@ exports.getPromotions = async (req, res, next) => {
     let queryStr = JSON.stringify(reqQuery);
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
     query = Promotion.find(JSON.parse(queryStr))
-    
+
     if (req.query.select) {
         const fields = req.query.select.split(',').join(' ');
         query = query.select(fields);
     }
-    
+
     if (req.query.sort) {
         const sortBy = req.query.sort.split(',').join(' ');
         query = query.sort(sortBy);
     } else {
         query = query.sort('-postedDate');
     }
-    
+
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
     const startIndex = (page - 1) * limit;
@@ -37,7 +37,9 @@ exports.getPromotions = async (req, res, next) => {
     try {
         const total = await Promotion.countDocuments();
         query = query.skip(startIndex).limit(limit);
-        const promotions = await query;
+        const promotions = await query.populate({
+            path: "provider"
+        });
         console.log(promotions)
         const pagination = {};
         if (endIndex < total) {
@@ -95,8 +97,9 @@ exports.createPromotion = async (req, res, next) => {
             if (req.body.provider) {
                 const existingRCProvider = await RentalCarProvider.findById(req.body.provider);
                 if (!existingRCProvider) {
-                    return res.status(404).json({ success: false, message: `RentalCarProvider not found for user ${req.body.provider}` });
+                    return res.status(404).json({ success: false, message: `RentalCarProvider not found with ID ${req.body.provider}` });
                 }
+                console.log('Admin creating promotion for provider:', existingRCProvider);
                 providerId = req.body.provider;
             }
         }
@@ -129,20 +132,20 @@ exports.createPromotion = async (req, res, next) => {
             return res.status(422).json({ success: false, message: 'Start date must be before end date' });
         }
         const promotionData = {
-            title, 
+            title,
             description,
-            discountPercentage, 
-            maxDiscountAmount, 
-            minPurchaseAmount, 
-            startDate, 
+            discountPercentage,
+            maxDiscountAmount,
+            minPurchaseAmount,
+            startDate,
             endDate,
             amount
         };
-        
+
         if (providerId) {
             promotionData.provider = providerId;
         }
-        
+
         const promotion = await Promotion.create(promotionData);
         res.status(201).json({ success: true, data: promotion });
     } catch (err) {
@@ -178,10 +181,12 @@ exports.updatePromotion = async (req, res, next) => {
         }
         else if (role === 'admin') {
             if (req.body.provider) {
-                const existingRCProvider = await RentalCarProvider.findOne({ user: req.body.provider });
+                // For admin, we're looking for a provider by its _id, not by user
+                const existingRCProvider = await RentalCarProvider.findById(req.body.provider);
                 if (!existingRCProvider) {
-                    return res.status(404).json({ success: false, message: `RentalCarProvider not found for user ${req.body.provider}` });
+                    return res.status(404).json({ success: false, message: `RentalCarProvider not found with ID ${req.body.provider}` });
                 }
+                console.log('Admin updating promotion for provider:', existingRCProvider);
             }
         }
 
@@ -225,10 +230,12 @@ exports.deletePromotion = async (req, res, next) => {
         }
         else if (role === 'admin') {
             if (req.body.provider) {
-                const existingRCProvider = await RentalCarProvider.findOne({ user: req.body.provider });
+                // For admin, we're looking for a provider by its _id, not by user
+                const existingRCProvider = await RentalCarProvider.findById(req.body.provider);
                 if (!existingRCProvider) {
-                    return res.status(404).json({ success: false, message: `RentalCarProvider not found for user ${req.body.provider}` });
+                    return res.status(404).json({ success: false, message: `RentalCarProvider not found with ID ${req.body.provider}` });
                 }
+                console.log('Admin deleting promotion for provider:', existingRCProvider);
             }
         }
 
@@ -237,7 +244,7 @@ exports.deletePromotion = async (req, res, next) => {
     } catch (err) {
         res.status(500).json({ success: false, message: "Unexpected Error" });
         console.log(err);
-    } 
+    }
 }
 
 

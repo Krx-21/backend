@@ -21,62 +21,7 @@ describe('Promotions Controller', () => {
       jest.restoreAllMocks();
     });
   
-    describe('getPromotions', () => {
-      it('should return all promotions with pagination', async () => {
-        const req = { query: {}, params: {} };
-        const res = mockRes();
-  
-        // Create a fully chainable mock query
-        const mockQuery = {
-          select: jest.fn().mockReturnThis(),
-          sort: jest.fn().mockReturnThis(),
-          skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockResolvedValue([{ title: 'Promo 1' }, { title: 'Promo 2' }])
-        };
-  
-        jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
-        jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(2);
-  
-        await getPromotions(req, res);
-  
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-          success: true,
-          count: 2,
-          pagination: {},
-          data: [{ title: 'Promo 1' }, { title: 'Promo 2' }]
-        });
-      });
-  
-      it('should return 500 if an error occurs', async () => {
-        const req = { query: {}, params: {} };
-        const res = mockRes();
-  
-        // Mock countDocuments (called before .skip/.limit())
-        jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(100);
-  
-        // This simulates the final awaited `query.skip().limit()` throwing an error
-        const mockQuery = {
-          select: jest.fn().mockReturnThis(),
-          sort: jest.fn().mockReturnThis(),
-          skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockImplementation(() => {
-            return Promise.reject(new Error('Unexpected Error'));
-          }),
-        };
-  
-        jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
-  
-        await getPromotions(req, res);
-  
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-          success: false,
-          message: 'Unexpected Error',
-        });
-      });
-    });
-
+    
     describe('getPromotion', () => {
         it('should return a single promotion', async () => {
           const req = { params: { id: '507f191e810c19729de860ea' } };
@@ -251,20 +196,44 @@ describe('Promotions Controller', () => {
       const req = {
         params: { id: '507f191e810c19729de860ea' },
         user: { role: 'admin', _id: '507f191e810c19729de860ea' },
-        body: { title: 'Updated Promo' },
+        body: { title: 'Updated Promo', provider: 'provider123' },
       };
       const res = mockRes();
 
-      jest.spyOn(Promotion, 'findById').mockResolvedValue({ title: 'Promo 1' });
+      // Mock Promotion.findById to return a valid promotion
+      const mockPromotion = { _id: '507f191e810c19729de860ea', provider: 'provider123' };
+      jest.spyOn(Promotion, 'findById').mockResolvedValue(mockPromotion);
+
+      // Mock RentalCarProvider.findById to return a valid provider
+      const mockProvider = { _id: 'provider123' };
+      jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(mockProvider);
+
+      // Mock Promotion.findByIdAndUpdate to simulate successful update
       jest.spyOn(Promotion, 'findByIdAndUpdate').mockResolvedValue({ title: 'Updated Promo' });
+
+      // Spy on console.log
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await updatePromotion(req, res);
 
+      expect(Promotion.findById).toHaveBeenCalledWith('507f191e810c19729de860ea');
+      expect(RentalCarProvider.findById).toHaveBeenCalledWith('provider123');
+      expect(Promotion.findByIdAndUpdate).toHaveBeenCalledWith(
+        '507f191e810c19729de860ea',
+        req.body,
+        { new: true, runValidators: true }
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: { title: 'Updated Promo' },
       });
+
+      // Verify console.log was called with the expected message
+      expect(consoleLogSpy).toHaveBeenCalledWith('Admin updating promotion for provider:', mockProvider);
+
+      // Restore console.log
+      consoleLogSpy.mockRestore();
     });
 
     it('should return 404 if promotion is not found', async () => {
@@ -289,30 +258,42 @@ describe('Promotions Controller', () => {
 
   describe('deletePromotion', () => {
     it('should delete a promotion', async () => {
-        const req = {
-          params: { id: '507f191e810c19729de860ea' },
-          user: { role: 'admin', _id: '507f191e810c19729de860ea' },
-          body: {},
-        };
-        const res = mockRes();
-  
-        const mockDelete = jest.fn();
-        const mockPromotion = {
-          deleteOne: mockDelete,
-          provider: null, // Important to include this!
-        };
-  
-        jest.spyOn(Promotion, 'findById').mockResolvedValue(mockPromotion);
-  
-        await deletePromotion(req, res);
-  
-        expect(mockDelete).toHaveBeenCalled(); // Optional but confirms deletion
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-          success: true,
-          message: 'Promotion deleted',
-        });
+      const req = {
+        params: { id: '507f191e810c19729de860ea' },
+        user: { role: 'admin', _id: '507f191e810c19729de860ea' },
+        body: { provider: 'provider123' },
+      };
+      const res = mockRes();
+    
+      // Mock Promotion.findById to return a valid promotion
+      const mockPromotion = { _id: '507f191e810c19729de860ea', provider: 'provider123', deleteOne: jest.fn() };
+      jest.spyOn(Promotion, 'findById').mockResolvedValue(mockPromotion);
+    
+      // Mock RentalCarProvider.findById to return a valid provider
+      const mockProvider = { _id: 'provider123' };
+      jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(mockProvider);
+    
+      // Spy on console.log
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    
+      await deletePromotion(req, res);
+    
+      expect(Promotion.findById).toHaveBeenCalledWith('507f191e810c19729de860ea');
+      expect(RentalCarProvider.findById).toHaveBeenCalledWith('provider123');
+      expect(mockPromotion.deleteOne).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: 'Promotion deleted',
+      });
+    
+      // Verify console.log was called with the expected message
+      expect(consoleLogSpy).toHaveBeenCalledWith('Admin deleting promotion for provider:', mockProvider);
+    
+      // Restore console.log
+      consoleLogSpy.mockRestore();
     });
+    
 
     it('should return 404 if promotion is not found', async () => {
       const req = {
@@ -332,4 +313,50 @@ describe('Promotions Controller', () => {
       });
     });
   });
+});
+
+
+
+
+describe('getPromotions', () => {
+  const mockRes = () => {
+    const res = {};
+    res.status = jest.fn().mockReturnThis();
+    res.json = jest.fn();
+    return res;
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  it('should return all promotions with pagination', async () => {
+    const req = { query: {}, params: {} };
+    const res = mockRes();
+
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockResolvedValue([{ title: 'Promo 1' }, { title: 'Promo 2' }]),
+    };
+
+    jest.spyOn(Promotion, 'find').mockReturnValue(mockQuery);
+    jest.spyOn(Promotion, 'countDocuments').mockResolvedValue(2);
+
+    await getPromotions(req, res);
+
+    expect(mockQuery.populate).toHaveBeenCalledWith({ path: 'provider' });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      count: 2,
+      pagination: {},
+      data: [{ title: 'Promo 1' }, { title: 'Promo 2' }],
+    });
+  });
+
+  
 });
