@@ -4,7 +4,6 @@ const app = require('../app');
 const RentalCarProvider = require('../models/RentalCarProvider');
 const User = require('../models/User');
 
-// 👇 Import the controller function directly for the unit test
 const { getRentalCarProviders, getRentalCarProvider, createRentalCarProvider, updateRentalCarProvider, deleteRentalCarProvider } = require('../controllers/rentalCarProviders');
 
 describe('Rental Car Provider Routes (CRUD grouped)', () => {
@@ -226,8 +225,6 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
   });
 });
 
-
-// ✅ Moved outside of main group to avoid beforeEach() setup
 describe('POST /api/v1/rentalcarproviders - unit tests for edge cases', () => {
   it('should return 404 if the user is not found', async () => {
     const req = {
@@ -272,9 +269,6 @@ describe('POST /api/v1/rentalcarproviders - unit tests for edge cases', () => {
     });
   });
 });
-
-
-
 
 describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
   const mockRes = () => {
@@ -344,15 +338,6 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
     });
   });
 });
-
-
-
-
-
-
-
-//move the code from rental car provider in controller
-
 
 describe('GET /api/v1/rentalcarproviders - query & pagination handling', () => {
   const mockRes = () => {
@@ -476,9 +461,6 @@ describe('GET /api/v1/rentalcarproviders - query & pagination handling', () => {
   });
 });
 
-
-
-
 describe('PUT /api/v1/rentalcarproviders/:id - updateRentalCarProvider edge cases', () => {
   const mockRes = () => {
     const res = {};
@@ -537,9 +519,3 @@ describe('PUT /api/v1/rentalcarproviders/:id - updateRentalCarProvider edge case
     });
   });
 });
-
-
-
-
-
-
