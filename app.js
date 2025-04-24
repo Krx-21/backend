@@ -11,7 +11,11 @@ const payments = require('./routes/payments');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { swaggerDocs } = require('./config/swagger');
-
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+const {xss} = require('express-xss-sanitizer');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
 // Load env vars
 dotenv.config({ path: 'config/config.env' });
 
@@ -29,6 +33,16 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(cookieParser());
+
+app.use(mongoSanitize());
+app.use(helmet());
+app.use(xss());
+const limiter=rateLimit({
+  windowsMs:10*60*1000,
+  max: 100
+});
+app.use(limiter);
+app.use(hpp());
 
 app.use('/api/v1/rentalCarProviders', rentalCarProviders);
 app.use('/api/v1/auth', auth);
