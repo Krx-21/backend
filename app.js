@@ -10,7 +10,7 @@ const images = require('./routes/images');
 const payments = require('./routes/payments');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const { swaggerDocs } = require('./config/swagger');
+//const { swaggerDocs } = require('./config/swagger');
 
 // Load env vars
 dotenv.config({ path: 'config/config.env' });
@@ -40,6 +40,6 @@ app.use('/api/v1/images', images);
 app.use('/api/v1/payments', payments);
 
 // Setup Swagger documentation
-swaggerDocs(app);
+//swaggerDocs(app);
 
 module.exports = app;
