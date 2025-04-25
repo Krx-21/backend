@@ -89,8 +89,8 @@ exports.createPromotion = async (req, res, next) => {
             if (!existingRCProvider) {
                 return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
             }
-            if (req.body.provider && req.body.provider.toString() !== userId.toString()) {
-                return res.status(400).json({ success: false, message: `You can only add promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
+            if (req.body.provider && req.body.provider.toString() !== existingRCProvider._id.toString()) {
+                return res.status(400).json({ success: false, message: `You can only add promotions for your own provider.` });
             }
             providerId =  existingRCProvider._id;
         } else if (role === 'admin') {
@@ -171,12 +171,12 @@ exports.updatePromotion = async (req, res, next) => {
                 return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
             }
 
-            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.id.toString()) {
+            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider._id.toString()) {
                 return res.status(403).json({ success: false, message: `You are not authorized to update this promotion.` });
             }
 
-            if (req.body.provider && req.body.provider.toString() !== userId.toString()) {
-                return res.status(400).json({ success: false, message: `You can only update promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
+            if (req.body.provider && req.body.provider.toString() !== existingRCProvider._id.toString()) {
+                return res.status(403).json({ success: false, message: `You can only update promotions for your own provider.` });
             }
         }
         else if (role === 'admin') {
@@ -220,12 +220,12 @@ exports.deletePromotion = async (req, res, next) => {
                 return res.status(404).json({ success: false, message: `RentalCarProvider not found ${userId}` });
             }
 
-            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider.id.toString()) {
+            if (!promotion.provider || promotion.provider.toString() !== existingRCProvider._id.toString()) {
                 return res.status(403).json({ success: false, message: `You are not authorized to delete this promotion.` });
             }
 
-            if (req.body.provider && req.body.provider.toString() !== userId.toString()) {
-                return res.status(400).json({ success: false, message: `You can only delete promotions for your own provider. ${userId}\n${req.body.provider} ${req.body.provider !== userId}` });
+            if (req.body.provider && req.body.provider.toString() !== existingRCProvider._id.toString()) {
+                return res.status(400).json({ success: false, message: `You can only delete promotions for your own provider.` });
             }
         }
         else if (role === 'admin') {

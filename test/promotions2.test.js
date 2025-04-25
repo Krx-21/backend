@@ -170,11 +170,12 @@ describe('createPromotion', () => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
   });
+  
 
   it('should return 404 if the provider is not found for a provider role', async () => {
     const req = {
       user: { role: 'provider', _id: '507f191e810c19729de860ea' },
-      body: {},
+      body: { },
     };
     const res = mockRes();
 
@@ -189,21 +190,24 @@ describe('createPromotion', () => {
     });
   });
 
-  it('should return 400 if the provider in the body does not match the user ID for a provider role', async () => {
+  it('should return 403 if the provider in the body does not match the user ID for a provider role', async () => {
     const req = {
-      user: { role: 'provider', _id: '507f191e810c19729de860ea' },
+      user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId' },
       body: { provider: 'anotherProviderId' },
     };
     const res = mockRes();
 
-    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ _id: '507f191e810c19729de860ea' });
+    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({
+      _id: 'myRcpId',
+      user: 'userId',
+    });
 
     await createPromotion(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `You can only add promotions for your own provider. 507f191e810c19729de860ea\nanotherProviderId true`,
+      message: `You can only create promotions for your own provider.`,
     });
   });
 
@@ -435,11 +439,17 @@ describe('updatePromotion', () => {
   });
 
   it('should return 403 if the provider does not match the promotion for a provider role', async () => {
-    const req = { params: { id: '507f191e810c19729de860ea' }, user: { role: 'provider', _id: 'userId' }, body: {} };
+    const req = { 
+      params: { id: '507f191e810c19729de860ea' }, 
+      user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId' }, 
+      body: {} };
     const res = mockRes();
 
     jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'anotherProviderId' });
-    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ id: 'providerId' });
+    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({
+      _id: 'myRcpId',
+      user: 'userId',
+    });
 
     await updatePromotion(req, res);
 
@@ -450,23 +460,26 @@ describe('updatePromotion', () => {
     });
   });
 
-  it('should return 400 if the provider in the body does not match the user ID for a provider role', async () => {
+  it('should return 403 if the provider in the body does not match the user ID for a provider role', async () => {
     const req = {
       params: { id: '507f191e810c19729de860ea' },
-      user: { role: 'provider', _id: 'userId' },
+      user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId' },
       body: { provider: 'anotherProviderId' },
     };
     const res = mockRes();
 
-    jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'providerId' });
-    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ id: 'providerId' });
+    jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'myRcpId' });
+    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({
+      _id: 'myRcpId',
+      user: 'userId',
+    });
 
     await updatePromotion(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `You can only update promotions for your own provider. userId\nanotherProviderId true`,
+      message: `You can only update promotions for your own provider.`,
     });
   });
 
@@ -579,11 +592,17 @@ describe('deletePromotion', () => {
   });
 
   it('should return 403 if the provider does not match the promotion for a provider role', async () => {
-    const req = { params: { id: '507f191e810c19729de860ea' }, user: { role: 'provider', _id: 'userId' } };
+    const req = { 
+      params: { id: '507f191e810c19729de860ea' }, 
+      user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId'  } 
+    };
     const res = mockRes();
 
     jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'anotherProviderId' });
-    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ id: 'providerId' });
+    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({
+      _id: 'myRcpId',
+      user: 'userId',
+    });
 
     await deletePromotion(req, res);
 
@@ -594,23 +613,26 @@ describe('deletePromotion', () => {
     });
   });
 
-  it('should return 400 if the provider in the body does not match the user ID for a provider role', async () => {
+  it('should return 403 if the provider in the body does not match the user ID for a provider role', async () => {
     const req = {
       params: { id: '507f191e810c19729de860ea' },
-      user: { role: 'provider', _id: 'userId' },
+      user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId' },
       body: { provider: 'anotherProviderId' },
     };
     const res = mockRes();
 
-    jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'providerId' });
-    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ id: 'providerId' });
+    jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'myRcpId' });
+    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({
+      _id: 'myRcpId',
+      user: 'userId',
+    });
 
     await deletePromotion(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `You can only delete promotions for your own provider. userId\nanotherProviderId true`,
+      message: `You can only delete promotions for your own provider.`,
     });
   });
 
