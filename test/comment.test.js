@@ -5,12 +5,16 @@ const User = require('../models/User');
 const Car = require('../models/Car');
 const Comment = require('../models/Comment');
 const RentalCarProvider = require('../models/RentalCarProvider');
+const express = require('express');
+
+app.use(express.json());
+
 
 const Booking = require('../models/Booking'); 
 jest.mock('../models/Booking'); 
 
 describe('Comment Routes', () => {
-  let userToken;
+  let userToken, providerToken;
   const createdIds = { users: [], providers: [], cars: [], comments: [] };
 
   beforeAll(async () => {
@@ -45,7 +49,7 @@ describe('Comment Routes', () => {
         role: 'provider'
       });
 
-    const token = userRes.body.token;
+    const providerToken = userRes.body.token;
     const userId = userRes.body.data._id;
     createdIds.users.push(userId);
 
@@ -91,6 +95,24 @@ describe('Comment Routes', () => {
       image: 'https://example.com/toyota.jpg'
     });
     createdIds.cars.push(car._id);
+
+    const firstComment = await Comment.create({
+      user: createdIds.users[1],
+      car: createdIds.cars[0],
+      comment: 'Great car!',
+      rating: 5 
+    });
+    createdIds.comments.push(firstComment._id);
+
+    
+    const secondComment = await Comment.create({
+      user: createdIds.users[1],
+      car: createdIds.cars[0],
+      comment: 'Great car (for Delete test)!',
+      rating: 5 
+    });
+    createdIds.comments.push(secondComment._id);
+    
   });
 
   it('should create a comment by a user', async () => {
@@ -179,7 +201,189 @@ describe('Comment Routes', () => {
     const res = await request(app)
       .get(`/api/v1/cars/${nonExistentCarId}/comments`);
   
-    expect(res.statusCode).toBe(404);
+    expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
+  });
+
+  it('should return 500 and log error if Car.findById throws', async () => {
+    jest.spyOn(require('../models/Car'), 'findById').mockImplementation(() => {
+      throw new Error();
+    });
+  
+    const carId = new mongoose.Types.ObjectId();
+    const res = await request(app).get(`/api/v1/cars/${carId}/comments`);
+  
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Unexpected Error');
+  
+    require('../models/Car').findById.mockRestore();
+  });
+
+  it('car not found', async () => {
+    const nonExistentCarId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post(`/api/v1/cars/${nonExistentCarId}/comments`) 
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        comment: 'Nice car!',
+        rating: 5
+      });
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('Is not your car booked', async () => {
+    const nonExistentCarId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post(`/api/v1/cars/${createdIds.cars[0]}/comments`) 
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        comment: 'Nice car!',
+        rating: 5
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+  
+  it('should handle unexpected errors in catch block', async () => {
+    jest.spyOn(require('../models/Car'), 'findById').mockImplementation(() => {
+      throw new Error();
+    });
+
+    const res = await request(app)
+        .post(`/api/v1/cars/${createdIds.cars[0]}/comments/`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+            comment: 'Test comment',
+            rating: 5
+          });
+
+    expect(res.status).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Unexpected Error');
+  });
+
+  it('should not found comment', async () => {
+    const nonExistentCommentId = new mongoose.Types.ObjectId();
+
+    const res = await request(app)
+      .put(`/api/v1/comments/${nonExistentCommentId}`)
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        comment: 'Test comment again',
+        rating: 3
+      });
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('should return 401 if the user is not the owner of the comment', async () => {
+    const randomTel = '22222' + Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    const randomEmail = `otheruser${Date.now()}@example.com`;
+    const randomName = 'User' + Math.random().toString(36).substring(2, 8);
+  
+    const otherUserRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send({
+        name: randomName,
+        telephoneNumber: randomTel,
+        email: randomEmail,
+        password: 'password456',
+        role: 'user'
+      });
+    const otherUserId = otherUserRes.body.data?._id;
+    const otherUserToken = otherUserRes.body.token;
+  
+    const res = await request(app)
+      .put(`/api/v1/comments/${createdIds.comments[0].toString()}`)
+      .set('Authorization', `Bearer ${otherUserToken}`)
+      .send({
+        comment: 'Test update comment again',
+        rating: 3
+      });
+  
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  
+    if (otherUserId) {
+      await User.findByIdAndDelete(otherUserId);
+    }
+  });
+
+
+  it('should return 500 if there is a server error (Update Comment)', async () => {
+    jest.spyOn(Comment, 'findById').mockImplementation(() => {
+      throw new Error();
+    });
+  
+    const res = await request(app)
+      .put(`/api/v1/comments/${createdIds.comments[0].toString()}`)
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ text: 'Will fail' });
+  
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Unexpected Error');
+  });
+
+  it('should return 404 if comment is not found', async () => {
+    Comment.findById.mockResolvedValue(null);
+
+    const res = await request(app)
+      .delete(`/api/v1/comments/${createdIds.comments[0]}`)
+      .set('Authorization', `Bearer ${userToken}`)
+
+    
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false)
+    Comment.findById.mockRestore();
+  });
+
+  it('should return 401 if the user is not the owner of the comment', async () => {
+    const randomTel = '22222' + Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    const randomEmail = `otheruser${Date.now()}@example.com`;
+    const randomName = 'User' + Math.random().toString(36).substring(2, 8);
+  
+    const otherUserRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send({
+        name: randomName,
+        telephoneNumber: randomTel,
+        email: randomEmail,
+        password: 'password456',
+        role: 'user'
+      });
+    const otherUserId = otherUserRes.body.data?._id;
+    const otherUserToken = otherUserRes.body.token;
+
+
+    const res = await request(app)
+      .delete(`/api/v1/comments/${createdIds.comments[0].toString()}`)
+      .set('Authorization', `Bearer ${otherUserToken}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  
+    if (otherUserId) {
+      await User.findByIdAndDelete(otherUserId);
+    }
+  });
+
+  it('should return 500 if there is a server error (Delete Comment)', async () => {
+    jest.spyOn(Comment, 'findById').mockImplementation(() => {
+      throw new Error();
+    });
+  
+    const res = await request(app)
+      .delete(`/api/v1/comments/${createdIds.comments[0].toString()}`)
+      .set('Authorization', `Bearer ${userToken}`)
+  
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Unexpected Error');
   });
 });
