@@ -36,6 +36,7 @@ describe('Auth Controller', () => {
 
 	afterEach(() => {
 		jest.clearAllMocks();
+		jest.restoreAllMocks();
 		process.env = OLD_ENV;
 	});
 

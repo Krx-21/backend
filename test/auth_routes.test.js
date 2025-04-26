@@ -21,6 +21,10 @@ const base = '/api/v1/auth';
 app.use(`${base}`, authRoutes);
 
 describe('Auth Routes', () => {
+	afterEach(() => {
+		jest.clearAllMocks();
+		jest.restoreAllMocks();
+	  });
 	it(`POST ${base}/register should register a user`, async () => {
 		const res = await request(app)
 			.post(`${base}/register`)

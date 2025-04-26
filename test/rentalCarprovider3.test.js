@@ -192,6 +192,10 @@ describe('GET /api/v1/rentalcarproviders - invalid query parameters', () => {
     res.json = jest.fn();
     return res;
   };
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
 
   it('should return 500 if query parameters are invalid', async () => {
     const req = {
@@ -220,6 +224,10 @@ describe('POST /api/v1/rentalcarproviders - missing required fields', () => {
     res.json = jest.fn();
     return res;
   };
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
 
   it('should return 400 if required fields are missing', async () => {
     const req = {
@@ -242,17 +250,6 @@ describe('POST /api/v1/rentalcarproviders - missing required fields', () => {
   });
 });
 
-describe('PUT /api/v1/rentalcarproviders/:id - invalid update payload', () => {
-  const mockRes = () => {
-    const res = {};
-    res.status = jest.fn().mockReturnThis();
-    res.json = jest.fn();
-    return res;
-  };
-
-  
-});
-
 describe('DELETE /api/v1/rentalcarproviders/:id - unauthorized deletion', () => {
   const mockRes = () => {
     const res = {};
@@ -260,6 +257,10 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unauthorized deletion', () => 
     res.json = jest.fn();
     return res;
   };
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
 
   it('should return 403 if user is not authorized to delete the provider', async () => {
     const req = {
@@ -293,6 +294,10 @@ describe('DELETE /api/v1/rentalcarproviders/:id - missing associated data', () =
     res.json = jest.fn();
     return res;
   };
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
 
   it('should handle missing associated data gracefully', async () => {
     const req = {
@@ -306,6 +311,7 @@ describe('DELETE /api/v1/rentalcarproviders/:id - missing associated data', () =
       user: '123',
       deleteOne: jest.fn()
     };
+
 
     jest.spyOn(RentalCarProvider, 'findById').mockResolvedValue(mockProvider);
     jest.spyOn(Car, 'find').mockResolvedValue([]); // No cars

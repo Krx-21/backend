@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Car = require('../models/Car');
 const Promotion = require('../models/Promotion');
 const RentalCarProvider = require('../models/RentalCarProvider');

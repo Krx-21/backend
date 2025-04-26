@@ -23,6 +23,11 @@ describe('Auth Middleware', () => {
     process.env.JWT_SECRET = 'testsecret';
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
   describe('protect middleware', () => {
     it('should return 401 if no token is provided', async () => {
       await protect(req, res, next);

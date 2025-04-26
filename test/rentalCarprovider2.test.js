@@ -12,6 +12,7 @@ describe('GET /api/v1/rentalcarproviders/:id', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should return 200 and the provider data', async () => {
@@ -35,12 +36,14 @@ describe('GET /api/v1/rentalcarproviders/:id', () => {
     const req = { params: { id: 'nonexistentid' } };
     const res = mockRes();
 
+    // Mock RentalCarProvider.findById to return null
     RentalCarProvider.findById.mockReturnValue({
-      populate: jest.fn().mockResolvedValue(null)
+      populate: jest.fn().mockResolvedValue(null),
     });
 
     await getRentalCarProvider(req, res);
 
+    expect(RentalCarProvider.findById).toHaveBeenCalledWith('nonexistentid');
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ success: false });
   });
