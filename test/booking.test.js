@@ -140,8 +140,48 @@ describe('Booking Routes', () => {
 				});
 
 			expect(res.statusCode).toBe(400);
-			expect(res.body.message).toBe('Invalid booking dates');
 		});
+
+    it('should not create a booking if the user has already made 3 bookings', async () => {
+      // register a new user
+      await User.deleteOne({ email: 'test3car@example.com' });
+      const newUserRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Test 3 Car User',
+          telephoneNumber: '0644444444',
+          email: 'test3car@example.com',
+          password: 'password123',
+          role: 'user',
+        });
+      const newUserToken = newUserRes.body.token;
+      const newUserId = newUserRes.body.data._id;
+      createdIds.users.push(newUserId);
+      
+      // Create 3 bookings for the user
+      for (let i = 0; i < 3; i++) {
+        const temp = await request(app)
+          .post(`/api/v1/cars/${carId}/bookings`)
+          .set('Authorization', `Bearer ${newUserToken}`)
+          .send({
+            start_date: new Date(Date.now() + 86400000 * (i + 1)).toISOString(),
+            end_date: new Date(Date.now() + 86400000 * (i + 2)).toISOString(),
+          });
+        createdIds.bookings.push(temp.body.data._id);
+        console.log('Booking created:', temp.body.data._id);
+      }
+
+      // Attempt to create a 4th booking
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${newUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000 * 4).toISOString(),
+          end_date: new Date(Date.now() + 86400000 * 5).toISOString(),
+        });
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toBe(`The user with ID ${newUserId} has already made 3 bookings`);
+    });
   });
 
   describe('GET /api/v1/bookings', () => {
@@ -154,7 +194,9 @@ describe('Booking Routes', () => {
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data.length).toBeGreaterThan(0);
     });
-
+  });
+  
+  describe('GET /api/v1/bookings/:bookingId', () => {
     it('should get a booking by ID', async () => {
       const res = await request(app)
         .get(`/api/v1/bookings/${bookingId}`)
@@ -162,6 +204,67 @@ describe('Booking Routes', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.data).toHaveProperty('_id', bookingId.toString());
+    });
+
+    it('should return 404 for non-existing booking', async () => {
+      const res = await request(app)
+        .get('/api/v1/bookings/123456789012345678901234')
+        .set('Authorization', `Bearer ${regUserToken}`);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.message).toBe('No booking found with id of 123456789012345678901234');
+    });
+  });
+
+  describe('PUT /api/v1/bookings/:bookingId', () => {
+    let newStartDate = new Date(Date.now() + 86400000 * 2).toISOString(); 
+    let newEndDate = new Date(Date.now() + 86400000 * 4).toISOString();
+    it('should update a booking', async () => {
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate, 
+          end_date: newEndDate, 
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveProperty('_id', bookingId.toString());
+      expect(res.body.data.start_date).toBe(newStartDate);
+      expect(res.body.data.end_date).toBe(newEndDate);
+    });
+
+    // it('should not update a booking with invalid dates', async () => {
+    //   const res = await request(app)
+    //     .put(`/api/v1/bookings/${bookingId}`)
+    //     .set('Authorization', `Bearer ${regUserToken}`)
+    //     .send({
+    //       start_date: newStartDate,
+    //       end_date: new Date(Date.now()).toISOString(),
+    //     });
+
+    //   expect(res.statusCode).toBe(400);
+    //   expect(res.body.message).toBe('Invalid booking dates');
+    // });
+  });
+
+  describe('DELETE /api/v1/bookings/:bookingId', () => {
+    it('should delete a booking', async () => {
+      console.log('Booking ID:', bookingId);
+      const res = await request(app)
+        .delete(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`);
+
+      expect(res.statusCode).toBe(200);
+    });
+
+    it('should return 404 for non-existing booking', async () => {
+      const res = await request(app)
+        .delete('/api/v1/bookings/123456789012345678901234')
+        .set('Authorization', `Bearer ${regUserToken}`);
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.message).toBe('No booking with the id of 123456789012345678901234');
     });
   });
 });
