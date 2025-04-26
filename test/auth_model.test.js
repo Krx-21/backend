@@ -17,6 +17,8 @@ describe('User Model', () => {
 
   afterEach(async () => {
     await User.deleteMany({});
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
 

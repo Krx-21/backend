@@ -29,6 +29,9 @@ describe('Car Routes', () => {
       ...createdIds.promos.map(id => Promotion.findByIdAndDelete(id))
     ]);
     Object.keys(createdIds).forEach(key => createdIds[key] = []);
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+    
   });
 
   beforeEach(async () => {

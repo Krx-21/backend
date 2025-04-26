@@ -58,6 +58,8 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
     await Promise.all(createdProviderIds.map(id => RentalCarProvider.findByIdAndDelete(id)));
     createdUserIds.length = 0;
     createdProviderIds.length = 0;
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -226,6 +228,10 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
 });
 
 describe('POST /api/v1/rentalcarproviders - unit tests for edge cases', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
   it('should return 404 if the user is not found', async () => {
     const req = {
       user: { _id: '123', id: '123' },
@@ -277,6 +283,10 @@ describe('DELETE /api/v1/rentalcarproviders/:id - unit test edge cases', () => {
     res.json = jest.fn();
     return res;
   };
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
 
   it('should return 400 if provider ID is invalid', async () => {
     const req = {
@@ -348,7 +358,8 @@ describe('GET /api/v1/rentalcarproviders - query & pagination handling', () => {
   };
 
   afterEach(() => {
-      jest.restoreAllMocks();
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should handle select fields', async () => {
@@ -470,6 +481,7 @@ describe('PUT /api/v1/rentalcarproviders/:id - updateRentalCarProvider edge case
   };
 
   afterEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 

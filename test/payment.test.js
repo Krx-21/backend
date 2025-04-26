@@ -16,6 +16,7 @@ describe('verifyPayment controller', () => {
 
 	afterEach(() => {
 		jest.clearAllMocks();
+		jest.restoreAllMocks();
 	});
 
 	it('should return 404 if booking is not found', async () => {

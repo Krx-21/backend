@@ -10,6 +10,10 @@ describe('deleteImages controller', () => {
       json: jest.fn()
     };
   });
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
 
   it('should return 400 if no IDs are provided', async () => {
     req.body = {};
