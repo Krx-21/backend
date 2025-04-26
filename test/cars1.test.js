@@ -11,10 +11,7 @@ describe('Car Routes', () => {
   const createdIds = { users: [], providers: [], cars: [], promos: [] };
 
   beforeAll(async () => {
-    await mongoose.connect('mongodb://127.0.0.1:27017/car_test_db', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect('mongodb://127.0.0.1:27017/car_test_db');
   });
 
   afterAll(async () => {
@@ -31,7 +28,6 @@ describe('Car Routes', () => {
     Object.keys(createdIds).forEach(key => createdIds[key] = []);
     jest.clearAllMocks();
     jest.restoreAllMocks();
-    
   });
 
   beforeEach(async () => {
@@ -78,7 +74,7 @@ describe('Car Routes', () => {
         year: 2022,
         pricePerDay: 50,
         carDescription: 'Comfortable sedan',
-        image: 'https://example.com/image.jpg'
+        //image: 'https://example.com/image.jpg'
       });
 
     expect(res.statusCode).toBe(201);

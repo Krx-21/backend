@@ -32,6 +32,8 @@ describe('Auth Controller', () => {
 	beforeEach(() => {
 		jest.resetModules();
 		process.env = { ...OLD_ENV };
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+        jest.spyOn(console, 'log').mockImplementation(() => {});
 	});
 
 	afterEach(() => {

@@ -12,21 +12,18 @@ describe('Booking Routes', () => {
 
   beforeAll(async () => {
     const mongoUri = 'mongodb://127.0.0.1:27017/auth_test_db';
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(mongoUri);
   });
 
   beforeEach(async () => {
     // Create provider user
-    await User.deleteOne({ email: 'provider@example.com' });
+    await User.deleteOne({ email: 'bt.provider@example.com' });
     const res = await request(app)
       .post('/api/v1/auth/register')
       .send({
-        name: 'Provider User',
-        telephoneNumber: '0891234567',
-        email: 'provider@example.com',
+        name: 'BT - Provider User',
+        telephoneNumber: '074571062',
+        email: 'bt.provider@example.com',
         password: 'password123',
         role: 'provider',
       });
@@ -40,12 +37,12 @@ describe('Booking Routes', () => {
       .post('/api/v1/rentalcarproviders')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        name: 'Test Provider',
+        name: 'BT - Test Provider',
         address: '123 Main Street',
         district: 'Downtown',
         province: 'Bangkok',
         postalcode: '10110',
-        tel: '0891234567',
+        tel: '074571062',
         region: 'Central',
         user: userId,
       });
@@ -54,32 +51,34 @@ describe('Booking Routes', () => {
     createdIds.providers.push(providerId);
 
     // Create a car
+		await Car.deleteOne({ brand: 'Toyota', model: 'Mighty X' });
     const carRes = await request(app)
       .post(`/api/v1/cars/${providerId}`)
       .set('Authorization', `Bearer ${token}`)
       .send({
         brand: 'Toyota',
-        model: 'Camry',
-        type: 'Sedan',
+        model: 'Mighty X',
+        type: 'Truck',
         topSpeed: 160,
-        year: 2020,
+        year: 1996,
         fuelType: 'Petrol',
         seatingCapacity: 5,
         pricePerDay: 1200,
         provider: providerId,
-        carDescription: 'A comfortable sedan for city driving',
+        carDescription: 'My father used to drive this car.',
       });
 
     carId = carRes.body.data._id;
     createdIds.cars.push(carId);
 
     // Create a regular user
+		await User.deleteOne({ email: 'bt.reguser0660006666@example.com' });
     const userRes = await request(app)
       .post('/api/v1/auth/register')
       .send({
-        name: 'Regular User',
-        telephoneNumber: '0897654321',
-        email: 'reguser0897654321@example.com',
+        name: 'BT - Regular User',
+        telephoneNumber: '0660006666',
+        email: 'bt.reguser0660006666@example.com',
         password: 'password123',
         role: 'user',
       });
@@ -109,6 +108,8 @@ describe('Booking Routes', () => {
       ...createdIds.users.map((id) => User.findByIdAndDelete(id)),
     ]);
     Object.keys(createdIds).forEach((key) => (createdIds[key] = []));
+		jest.clearAllMocks();
+		jest.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -182,6 +183,26 @@ describe('Booking Routes', () => {
       expect(res.statusCode).toBe(400);
       expect(res.body.message).toBe(`The user with ID ${newUserId} has already made 3 bookings`);
     });
+
+		it('should handle unexpected errors in catch block', async () => {
+			jest.spyOn(require('../models/Car'), 'findById').mockImplementation(() => {
+				throw new Error();
+			});
+	
+			const res = await request(app)
+				.post(`/api/v1/cars/${createdIds.cars[0]}/bookings`)
+				.set('Authorization', `Bearer ${regUserToken}`)
+				.send({
+					start_date: new Date(Date.now() + 86400000).toISOString(),
+					end_date: new Date(Date.now() + 86400000 * 3).toISOString(),
+				});
+	
+			expect(res.status).toBe(500);
+			expect(res.body.success).toBe(false);
+			expect(res.body.message).toBe('Unexpected Error');
+	
+			require('../models/Car').findById.mockRestore();
+		});
   });
 
   describe('GET /api/v1/bookings', () => {
@@ -194,6 +215,25 @@ describe('Booking Routes', () => {
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.data.length).toBeGreaterThan(0);
     });
+
+		it('should handle unexpected errors in catch block (GET all)', async () => {
+			// Properly mock Booking.find to return a rejected promise
+			const mockFind = jest.spyOn(require('../models/Booking'), 'find').mockImplementation(() => {
+				return Promise.reject(new Error('Database error'));
+			});
+		
+			const res = await request(app)
+				.get('/api/v1/bookings')
+				.set('Authorization', `Bearer ${regUserToken}`);
+		
+			// Assertions
+			expect(res.status).toBe(500);
+			expect(res.body.success).toBe(false);
+			expect(res.body.message).toBe('Unexpected Error');
+		
+			// Restore the mock
+			mockFind.mockRestore();
+		});
   });
   
   describe('GET /api/v1/bookings/:bookingId', () => {
@@ -213,6 +253,22 @@ describe('Booking Routes', () => {
 
       expect(res.statusCode).toBe(404);
       expect(res.body.message).toBe('No booking found with id of 123456789012345678901234');
+    });
+
+		it('should handle unexpected errors in catch block (GET by ID)', async () => {
+      jest.spyOn(require('../models/Booking'), 'findById').mockImplementation(() => {
+        throw new Error();
+      });
+
+      const res = await request(app)
+        .get(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`);
+
+      expect(res.status).toBe(500);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Unexpected Error');
+
+      require('../models/Booking').findById.mockRestore();
     });
   });
 
@@ -234,18 +290,38 @@ describe('Booking Routes', () => {
       expect(res.body.data.end_date).toBe(newEndDate);
     });
 
-    // it('should not update a booking with invalid dates', async () => {
-    //   const res = await request(app)
-    //     .put(`/api/v1/bookings/${bookingId}`)
-    //     .set('Authorization', `Bearer ${regUserToken}`)
-    //     .send({
-    //       start_date: newStartDate,
-    //       end_date: new Date(Date.now()).toISOString(),
-    //     });
+    it('should not update a booking with invalid dates', async () => {
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate,
+          end_date: new Date(Date.now()).toISOString(),
+        });
 
-    //   expect(res.statusCode).toBe(400);
-    //   expect(res.body.message).toBe('Invalid booking dates');
-    // });
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toBe('Start date must be before end date.');
+    });
+
+		it('should handle unexpected errors in catch block (PUT)', async () => {
+      jest.spyOn(require('../models/Booking'), 'findById').mockImplementation(() => {
+        throw new Error();
+      });
+
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+          end_date: new Date(Date.now() + 86400000 * 4).toISOString(),
+        });
+
+      expect(res.status).toBe(500);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Unexpected Error');
+
+      require('../models/Booking').findById.mockRestore();
+    });
   });
 
   describe('DELETE /api/v1/bookings/:bookingId', () => {
@@ -266,5 +342,23 @@ describe('Booking Routes', () => {
       expect(res.statusCode).toBe(404);
       expect(res.body.message).toBe('No booking with the id of 123456789012345678901234');
     });
+
+		it('should handle unexpected errors in catch block (DELETE)', async () => {
+			// Mock Booking.findById to throw an error
+			const mockFindById = jest.spyOn(require('../models/Booking'), 'findById').mockImplementation(() => {
+				throw new Error();
+			});
+	
+			const res = await request(app)
+				.delete(`/api/v1/bookings/${bookingId}`)
+				.set('Authorization', `Bearer ${regUserToken}`);
+	
+			expect(res.status).toBe(500);
+			expect(res.body.success).toBe(false);
+			expect(res.body.message).toBe('Unexpected Error');
+	
+			// Restore the mock
+			mockFindById.mockRestore();
+		});
   });
 });

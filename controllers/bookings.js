@@ -124,7 +124,7 @@ exports.addBooking = async (req, res, next) => {
         if(startDate>endDate){
             return res.status(400).json({ 
                 success: false,
-                error: "Start date must be before end date."
+                message: "Start date must be before end date."
             });
         }
         if(startDate < Date.now()){
@@ -215,6 +215,26 @@ exports.updateBooking = async (req, res, next) => {
                 success: false,
                 message: 'You are not authorized to update booking for other providers beside your own'
             });
+        }
+
+        const startDate = new Date(req.body.start_date)
+        const endDate = new Date(req.body.end_date)
+
+        if (!req.body.start_date || !req.body.end_date) {
+            return res.status(400).json({ success: false, message: "startDate and endDate are required" });
+        }
+
+        if(startDate>endDate){
+            return res.status(400).json({ 
+                success: false,
+                message: "Start date must be before end date."
+            });
+        }
+        if(startDate < Date.now()){
+            return res.status(400).json({
+                success: false,
+                message: "Can't Make Reservation in Past"
+            })
         }
 
         booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {

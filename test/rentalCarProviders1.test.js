@@ -4,7 +4,7 @@ const app = require('../app');
 const RentalCarProvider = require('../models/RentalCarProvider');
 const User = require('../models/User');
 
-const { getRentalCarProviders, getRentalCarProvider, createRentalCarProvider, updateRentalCarProvider, deleteRentalCarProvider } = require('../controllers/rentalCarProviders');
+const { getRentalCarProviders, createRentalCarProvider, updateRentalCarProvider, deleteRentalCarProvider } = require('../controllers/rentalCarProviders');
 
 describe('Rental Car Provider Routes (CRUD grouped)', () => {
   let token;
@@ -14,20 +14,17 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
 
   beforeAll(async () => {
     const mongoUri = 'mongodb://127.0.0.1:27017/auth_test_db';
-    await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect(mongoUri);
   });
 
   beforeEach(async () => {
-    await User.deleteOne({ email: 'provider@example.com' });
+    await User.deleteOne({ email: 'rcpt.provider@example.com' });
     const res = await request(app)
       .post('/api/v1/auth/register')
       .send({
-        name: 'Provider User',
+        name: 'RCPT - Provider User',
         telephoneNumber: '0891234567',
-        email: 'provider@example.com',
+        email: 'rcpt.provider@example.com',
         password: 'password123',
         role: 'provider'
       });
@@ -35,6 +32,7 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
     token = res.body.token;
     createdUserIds.push(res.body.data._id);
 
+    await RentalCarProvider.deleteOne({ name: 'Test Provider' });
     const rcpRes = await request(app)
       .post('/api/v1/rentalcarproviders')
       .set('Authorization', `Bearer ${token}`)
@@ -68,13 +66,13 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
 
   describe('POST /api/v1/rentalcarproviders', () => {
     it('should create a new rental car provider', async () => {
-      await User.deleteOne({ email: 'secondprovider@example.com' });
+      await User.deleteOne({ email: 'rcpt.secondprovider@example.com' });
       const resRegister = await request(app)
         .post('/api/v1/auth/register')
         .send({
-          name: 'Second Provider',
+          name: 'RCPT - Second Provider',
           telephoneNumber: '0899876543',
-          email: 'secondprovider@example.com',
+          email: 'rcpt.secondprovider@example.com',
           password: 'password123',
           role: 'provider'
         });
@@ -83,7 +81,6 @@ describe('Rental Car Provider Routes (CRUD grouped)', () => {
       createdUserIds.push(resRegister.body.data._id);
 
       await RentalCarProvider.deleteOne({ name: 'Another Test Provider' });
-
       const res = await request(app)
         .post('/api/v1/rentalcarproviders')
         .set('Authorization', `Bearer ${secondToken}`)

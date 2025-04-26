@@ -12,7 +12,7 @@ describe('GET /api/v1/rentalcarproviders/:id', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.restoreAllMocks();
+    jest.restoreAllMocks(); 
   });
 
   it('should return 200 and the provider data', async () => {

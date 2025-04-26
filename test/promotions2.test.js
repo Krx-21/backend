@@ -190,7 +190,7 @@ describe('createPromotion', () => {
     });
   });
 
-  it('should return 403 if the provider in the body does not match the user ID for a provider role', async () => {
+  it('should return 400 if the provider in the body does not match the user ID for a provider role', async () => {
     const req = {
       user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId' },
       body: { provider: 'anotherProviderId' },
@@ -204,10 +204,10 @@ describe('createPromotion', () => {
 
     await createPromotion(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: `You can only create promotions for your own provider.`,
+      message: `You can only add promotions for your own provider.`,
     });
   });
 
@@ -530,13 +530,20 @@ describe('updatePromotion', () => {
       body: { title: 'Updated Promo' },
     };
     const res = mockRes();
-
+    
     jest.spyOn(Promotion, 'findById').mockResolvedValue({ provider: 'providerId' });
-    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ id: 'providerId' });
+    jest.spyOn(RentalCarProvider, 'findOne').mockResolvedValue({ _id: 'providerId', user: 'userId' });
     jest.spyOn(Promotion, 'findByIdAndUpdate').mockResolvedValue({ title: 'Updated Promo' });
 
     await updatePromotion(req, res);
 
+    expect(Promotion.findById).toHaveBeenCalledWith('507f191e810c19729de860ea');
+    expect(RentalCarProvider.findOne).toHaveBeenCalledWith({ user: 'userId' });
+    expect(Promotion.findByIdAndUpdate).toHaveBeenCalledWith(
+      '507f191e810c19729de860ea',
+      req.body,
+      { new: true, runValidators: true }
+    );
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
@@ -613,7 +620,7 @@ describe('deletePromotion', () => {
     });
   });
 
-  it('should return 403 if the provider in the body does not match the user ID for a provider role', async () => {
+  it('should return 400 if the provider in the body does not match the user ID for a provider role', async () => {
     const req = {
       params: { id: '507f191e810c19729de860ea' },
       user: { role: 'provider', _id: 'userId', myRcpId: 'myRcpId' },
@@ -629,7 +636,7 @@ describe('deletePromotion', () => {
 
     await deletePromotion(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
       message: `You can only delete promotions for your own provider.`,

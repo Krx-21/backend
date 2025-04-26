@@ -416,6 +416,7 @@ describe('Cars Controller', () => {
       });
     });
   });
+
   describe('calculateCarPrice', () => {
     it('should calculate the car price without promotion', async () => {
       const req = { body: { carId: 'car123', numberOfDays: 5 } };
@@ -519,7 +520,6 @@ describe('Cars Controller', () => {
     });
   });
 });
-
 
 describe('getCars', () => {
     const mockRes = () => {
@@ -627,7 +627,4 @@ describe('getCars', () => {
         data: mockCars,
       });
     });
-  
-    
-  });
-  
+});  
