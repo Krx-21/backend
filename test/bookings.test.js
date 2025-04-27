@@ -883,6 +883,3 @@ describe('Booking Routes', () => {
     });
   });
 });
-
-
-
