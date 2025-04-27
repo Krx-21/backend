@@ -277,6 +277,8 @@ exports.updateBooking = async (req, res, next) => {
 			}
 
 			req.body.totalprice = finalPrice;
+		} else {
+			return res.status(400).json({ success: false, message: "startDate and endDate are required" });
 		}
 
 		if (req.body.status && (req.body.statusUpdateOnly || (!req.body.start_date && !req.body.end_date))) {

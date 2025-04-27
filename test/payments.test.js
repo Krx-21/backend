@@ -42,7 +42,7 @@ describe('verifyPayment controller', () => {
 		expect(res.status).toHaveBeenCalledWith(401);
 		expect(res.json).toHaveBeenCalledWith({
 			success: false,
-			message: `User UserId is not authorized to update this booking`
+			message: `User anotherUserId is not authorized to update this booking`
 		});
 	});
 
