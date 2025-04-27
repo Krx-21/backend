@@ -489,6 +489,22 @@ describe('Booking Routes', () => {
       expect(res.body.data.end_date).toBe(newEndDate);
     });
 
+    it('should update a booking status', async () => {
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate, 
+          end_date: newEndDate, 
+          statusUpdateOnly: 'completed',
+          status: 'completed',
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveProperty('_id', bookingId.toString());
+      expect(res.body.data.status).toBe('completed');
+    });
+
 
     it('should return 400 if the promotion provider does not match the car provider', async () => {
       await User.deleteOne({ email: 'unique.provider@example.com' });
