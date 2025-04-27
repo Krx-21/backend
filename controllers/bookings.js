@@ -289,10 +289,6 @@ exports.updateBooking = async (req, res, next) => {
 			return res.status(200).json({ success: true, data: booking });
 		}
 
-		if (!req.body.totalprice) {
-			req.body.totalprice = booking.totalprice;
-		}
-
 		booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
 			new: true,
 			runValidators: true
