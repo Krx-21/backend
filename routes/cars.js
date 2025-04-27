@@ -1,8 +1,8 @@
 const express = require('express');
-const router = express.Router({mergeParams: true});
+const router = express.Router({ mergeParams: true });
 
 const { getCars, getCar, createCar, updateCar, deleteCar, calculateCarPrice } = require('../controllers/cars');
-const { protect, authorize } = require('../middleware/auth'); 
+const { protect, authorize } = require('../middleware/auth');
 const commentRouter = require('./comments');
 const bookingRouter = require('./bookings')
 
@@ -10,19 +10,17 @@ router.use('/:carId/comments', commentRouter);
 router.use('/:carId/bookings', bookingRouter);
 
 router.route('/calculate-price')
-    .post(calculateCarPrice)
+	.post(calculateCarPrice)
 
 router.route('/')
-    .get(getCars);
-    
+	.get(getCars);
+
 router.route('/:id')
-    .get(getCar) 
-    .put(protect, authorize('admin', 'provider'), updateCar) 
-    .delete(protect, authorize('admin', 'provider'), deleteCar); 
+	.get(getCar)
+	.put(protect, authorize('admin', 'provider'), updateCar)
+	.delete(protect, authorize('admin', 'provider'), deleteCar);
 
 router.route('/:providerId')
-    .post(protect, authorize('admin', 'provider'), createCar); 
-
-
+	.post(protect, authorize('admin', 'provider'), createCar);
 
 module.exports = router;

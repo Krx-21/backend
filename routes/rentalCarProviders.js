@@ -10,10 +10,10 @@ router.use('/:providerId/promotions/', promotionRouter);
 router.use('/:providerId/cars/', carRouter);
 
 router.route('/').get(getRentalCarProviders)
-    .post(protect, authorize('provider'), createRentalCarProvider);
+	.post(protect, authorize('provider'), createRentalCarProvider);
 router.route('/:id')
-    .get(getRentalCarProvider)
-    .put(protect, authorize('admin','provider'), updateRentalCarProvider)
-    .delete(protect, authorize('admin'), deleteRentalCarProvider);
+	.get(getRentalCarProvider)
+	.put(protect, authorize('admin', 'provider'), updateRentalCarProvider)
+	.delete(protect, authorize('admin'), deleteRentalCarProvider);
 
 module.exports = router;
