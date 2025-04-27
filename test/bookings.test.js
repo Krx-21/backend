@@ -303,25 +303,6 @@ describe('Booking Routes', () => {
       expect(res.body.data.length).toBeGreaterThan(0);
     });
 
-		// it('should handle unexpected errors in catch block (GET all)', async () => {
-		// 	// Properly mock Booking.find to return a rejected promise
-		// 	const mockFind = jest.spyOn(require('../models/Booking'), 'find').mockImplementation(() => {
-		// 		return Promise.reject(new Error('Database error'));
-		// 	});
-		
-		// 	const res = await request(app)
-		// 		.get('/api/v1/bookings')
-		// 		.set('Authorization', `Bearer ${regUserToken}`);
-		
-		// 	// Assertions
-		// 	expect(res.status).toBe(500);
-		// 	expect(res.body.success).toBe(false);
-		// 	expect(res.body.message).toBe('Unexpected Error');
-		
-		// 	// Restore the mock
-		// 	mockFind.mockRestore();
-		// });
-
     it('should allow admin to retrieve all bookings', async () => {
       // Create an admin user
       await User.deleteOne({ email: 'bt.admin.123@example.com' });
@@ -345,6 +326,40 @@ describe('Booking Routes', () => {
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
     });
+
+
+
+    it('should handle unexpected errors in catch block (GET bookings for a specific car)', async () => {
+      const BookingModel = require('../models/Booking');
+    
+      // Properly mock find to return an object where populate() throws when awaited
+      jest.spyOn(BookingModel, 'find').mockReturnValue({
+        populate: () => Promise.reject(new Error('Unexpected Error'))
+      });
+    
+      const res = await request(app)
+        .get(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${regUserToken}`);
+    
+      expect(res.status).toBe(500);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Unexpected Error');
+    
+      BookingModel.find.mockRestore();
+    });
+    
+
+
+
+			
+			
+
+
+
+
+    
+
+    
   });
   
   describe('GET /api/v1/bookings/:bookingId', () => {
