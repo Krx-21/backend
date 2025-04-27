@@ -7,7 +7,8 @@ const User = require('../models/User');
 const Booking = require('../models/Booking');
 
 describe('Booking Routes', () => {
-  let token, providerId, carId, bookingId, regUserToken, regUserId;
+  let token, providerId, carId, bookingId, regUserToken, regUserId;    
+  let reg2UserToken, reg2UserId, bookingfakeId;
   const createdIds = { users: [], providers: [], cars: [], bookings: [] };
 
   beforeAll(async () => {
@@ -85,7 +86,23 @@ describe('Booking Routes', () => {
 
     regUserToken = userRes.body.token;
     regUserId = userRes.body.data._id;
-    createdIds.users.push(regUserId);
+
+
+    //Create second regular user
+    await User.deleteOne({ email: 'bt.reguser0770007777@example.com' });
+    const user2Res = await request(app)
+      .post('/api/v1/auth/register')
+      .send({
+        name: 'BT - Regular User 2',
+        telephoneNumber: '0660106666',
+        email: 'bt.reguser0770007777@example.com',
+        password: 'password123',
+        role: 'user',
+      });
+
+    reg2UserToken = user2Res.body.token;
+    reg2UserId = user2Res.body.data._id;
+    createdIds.users.push(reg2UserId);
 
     // Create a booking
     const bookingRes = await request(app)
@@ -498,6 +515,89 @@ describe('Booking Routes', () => {
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe(`User ${newUserRes.body.data._id} is not authorized to update this booking`);
     });
+
+    // it('should return 403 if the provider tries to update booking for other providers beside their own', async () => {
+    //   // Create a new provider user who does not own the car
+    //   await User.deleteOne({ email: 'unauthorized60.provider@example.com' });
+    //   const newProviderRes = await request(app)
+    //     .post('/api/v1/auth/register')
+    //     .send({
+    //       name: 'Unauthorized Provider-bt60',
+    //       telephoneNumber: '090909090559',
+    //       email: 'unauthorized60.provider@example.com',
+    //       password: 'password123',
+    //       role: 'provider',
+    //     });
+    
+    //   const unauthorizedProviderToken = newProviderRes.body.token;
+    //   console.log('Unauthorized Provider Token:', unauthorizedProviderToken);
+    //   const bookingfakeRes = await request(app)
+    //   .post(`/api/v1/cars/${carId}/bookings`)
+    //   .set('Authorization', `Bearer ${regUserToken}`)
+    //   .send({
+    //     start_date: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
+    //     end_date: new Date(Date.now() + 86400000 * 3).toISOString(), // 3 days from now
+    //   });
+
+    //   bookingfakeId = bookingfakeRes.body.data._id;
+    //   createdIds.bookings.push(bookingfakeId);
+      
+    
+    //   // Attempt to update the booking with the unauthorized provider's token
+    //   const res = await request(app)
+    //     .put(`/api/v1/bookings/${bookingfakeId}`)
+    //     .set('Authorization', `Bearer ${unauthorizedProviderToken}`)
+    //     .send({
+    //       start_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+    //       end_date: new Date(Date.now() + 86400000 * 4).toISOString(),
+    //     });
+    
+    //   // Assertions
+    //   expect(res.statusCode).toBe(403);
+    //   expect(res.body.success).toBe(false);
+    //   expect(res.body.message).toBe('You are not authorized to update booking for other providers beside your own');
+    // });
+
+    it('should return 403 if the provider tries to update booking for other providers beside their own', async () => {
+      // Create a new provider user who does not own the car
+      await User.deleteOne({ email: 'unauthorized.provider673305@example.com' });
+      const newProviderRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unauthorized Provider for 403',
+          telephoneNumber: '000000111111',
+          email: 'unauthorized.provider673305@example.com',
+          password: 'password123',
+          role: 'provider',
+        });
+    
+      const unauthorizedProviderToken = newProviderRes.body.token;
+    
+      // Create a booking by a regular user for the car
+      const bookingRes = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${reg2UserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
+          end_date: new Date(Date.now() + 86400000 * 3).toISOString(), // 3 days from now
+        });
+    
+      const bookingId = bookingRes.body.data._id;
+    
+      // Attempt to update the booking with the unauthorized provider's token
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${unauthorizedProviderToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+          end_date: new Date(Date.now() + 86400000 * 4).toISOString(),
+        });
+    
+      // Assertions
+      expect(res.statusCode).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('You are not authorized to update booking for other providers beside your own');
+    });
   });
 
   describe('DELETE /api/v1/bookings/:bookingId', () => {
@@ -565,3 +665,6 @@ describe('Booking Routes', () => {
     });
   });
 });
+
+
+
