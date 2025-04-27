@@ -220,6 +220,32 @@ describe('Booking Routes', () => {
 	
 			require('../models/Car').findById.mockRestore();
 		});
+
+    it('should return 400 if startDate and endDate are not provided', async () => {
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          // No start_date and end_date provided
+        });
+      expect(res.statusCode).toBe(400);     
+      expect(res.body.message).toBe("startDate and endDate are required");
+    })
+
+    it('should return 404 if carId is not found', async () => {
+      const res = await request(app)
+        .post('/api/v1/cars/123456789012345678901234/bookings')
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000).toISOString(),
+          end_date: new Date(Date.now() + 86400000 * 3).toISOString(),
+        });
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.message).toBe('No rental car provider with the id of 123456789012345678901234');
+    } );
+
+
   });
 
   describe('GET /api/v1/bookings', () => {    
