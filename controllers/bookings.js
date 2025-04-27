@@ -279,8 +279,12 @@ exports.updateBooking = async (req, res, next) => {
 			req.body.totalprice = finalPrice;
 		}
 
-		if (req.body.status && !req.body.start_date && !req.body.end_date) {
-			req.body.totalprice = booking.totalprice;
+		if (req.body.status && (req.body.statusUpdateOnly || (!req.body.start_date && !req.body.end_date))) {
+			console.log('Status-only update detected for booking:', req.params.id);
+			booking.status = req.body.status;
+			booking = await booking.save();
+
+			return res.status(200).json({ success: true, data: booking });
 		}
 
 		if (!req.body.totalprice) {
