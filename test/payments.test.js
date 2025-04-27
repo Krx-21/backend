@@ -32,6 +32,21 @@ describe('verifyPayment controller', () => {
 		});
 	});
 
+	it('should return 401 if booking is not authorized', async () => {
+		req.user = { id:'anotherUserId', role: 'user' }
+		Booking.findById.mockResolvedValue({ user: "myId" });
+
+		await verifyPayment(req, res);
+
+		expect(Booking.findById).toHaveBeenCalledWith('mockBookingId');
+		expect(res.status).toHaveBeenCalledWith(401);
+		expect(res.json).toHaveBeenCalledWith({
+			success: false,
+			message: `User UserId is not authorized to update this booking`
+		});
+	});
+
+
 	it('should update booking status and return success if booking is found', async () => {
 		const mockBooking = {
 			_id: 'mockBookingId',
