@@ -611,6 +611,29 @@ describe('Booking Routes', () => {
       expect(res.statusCode).toBe(200);
     });
 
+    it('should return 401 if the user is not authorized to delete the booking', async () => {
+      await User.deleteOne({ email: 'unauthorized.user@example.com' });
+      const newUserRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unauthorized User',
+          telephoneNumber: '0000800000',
+          email: 'unauthorized.user@example.com',
+          password: 'password123',
+          role: 'user',
+        });
+    
+      const unauthorizedUserToken = newUserRes.body.token;
+    
+      const res = await request(app)
+        .delete(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${unauthorizedUserToken}`);
+    
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(`User ${newUserRes.body.data._id} is not authorized to delete this booking`);
+    });
+
     it('should return 404 for non-existing booking', async () => {
       const res = await request(app)
         .delete('/api/v1/bookings/123456789012345678901234')
