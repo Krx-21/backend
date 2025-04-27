@@ -329,5 +329,3 @@ describe('DELETE /api/v1/rentalcarproviders/:id - missing associated data', () =
     expect(res.json).toHaveBeenCalledWith({ success: true, data: {} });
   });
 });
-
-

@@ -21,15 +21,8 @@ dotenv.config({ path: 'config/config.env' });
 
 const app = express();
 
-// CORS config
-const corsOptions = {
-  origin: 'https://web-project-delta-nine.vercel.app',
-  methods: 'GET, POST, OPTIONS, PUT, DELETE',
-  allowedHeaders: 'Content-Type, Authorization',
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
+// CORS config - Allow all origins
+app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(cookieParser());
@@ -41,7 +34,7 @@ const limiter=rateLimit({
   windowsMs:10*60*1000,
   max: 100
 });
-app.use(limiter);
+//app.use(limiter);
 app.use(hpp());
 
 app.use('/api/v1/rentalCarProviders', rentalCarProviders);

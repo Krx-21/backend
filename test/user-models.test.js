@@ -4,10 +4,7 @@ const User = require('../models/User');
 
 describe('User Model', () => {
   beforeAll(async () => {
-    await mongoose.connect('mongodb://127.0.0.1:27017/user-model-test', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect('mongodb://127.0.0.1:27017/user-model-test');
   });
 
   afterAll(async () => {
@@ -21,14 +18,13 @@ describe('User Model', () => {
     jest.restoreAllMocks();
   });
 
-
   it('should generate a valid JWT token', async () => {
     process.env.JWT_SECRET = 'testsecret';
     process.env.JWT_EXPIRE = '1h';
     const user = await User.create({
-      name: 'JWT User',
+      name: 'UMT - JWT Test User',
       telephoneNumber: '5555555555',
-      email: 'jwtuser@example.com',
+      email: 'umt.jwtuser@example.com',
       password: 'password'
     });
     const token = user.getSignedJwtToken();
@@ -38,9 +34,9 @@ describe('User Model', () => {
 
   it('should match password correctly', async () => {
     const user = await User.create({
-      name: 'Password User',
+      name: 'UMT - Password Test User',
       telephoneNumber: '6666666666',
-      email: 'passworduser@example.com',
+      email: 'umt.passworduser@example.com',
       password: 'mypassword'
     });
     const isMatch = await user.matchPassword('mypassword');
@@ -51,9 +47,9 @@ describe('User Model', () => {
 
   it('should not re-hash password if not modified', async () => {
     const user = await User.create({
-      name: 'No Rehash User',
+      name: 'UMT - No Rehash Test User',
       telephoneNumber: '7777777777',
-      email: 'norehash@example.com',
+      email: 'umt.norehash@example.com',
       password: 'originalpassword'
     });
     const originalHash = user.password;

@@ -21,6 +21,8 @@ describe('Auth Middleware', () => {
     next = jest.fn();
 
     process.env.JWT_SECRET = 'testsecret';
+    jest.spyOn(console, 'error').mockImplementation(() => {}); 
+    jest.spyOn(console, 'log').mockImplementation(() => {}); 
   });
 
   afterEach(() => {
@@ -76,9 +78,7 @@ describe('Auth Middleware', () => {
       middleware(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({
-        msg: 'Role user is not authorized to access this route'
-      });
+      expect(res.json).toHaveBeenCalledWith({ msg: 'Role user is not authorized to access this route' });
     });
 
     it('should call next if user role is authorized', () => {

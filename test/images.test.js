@@ -10,6 +10,7 @@ describe('deleteImages controller', () => {
       json: jest.fn()
     };
   });
+  
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
