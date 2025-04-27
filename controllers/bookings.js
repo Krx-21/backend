@@ -209,7 +209,7 @@ exports.updateBooking = async (req, res, next) => {
 			return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking` });
 		}
 
-		const provider = rentalCarProvider.findById(booking.car.provider.toString());
+		const provider = await rentalCarProvider.findById(booking.car.provider.toString());
 		if (req.user.role === 'provider' && provider.user.toString() !== req.user.id) {
 			return res.status(403).json({
 				success: false,
