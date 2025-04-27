@@ -696,6 +696,27 @@ describe('Booking Routes', () => {
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe('You are not authorized to update booking for other providers beside your own');
     });
+
+
+    it('should return 404 if CarId is not found', async () => {
+      // Mock Car.findById to return null
+      jest.spyOn(require('../models/Car'), 'findById').mockResolvedValue(null);
+    
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate,
+          end_date: newEndDate,
+        });
+    
+      // Assertions
+      expect(res.statusCode).toBe(404);
+      expect(res.body.message).toBe('Car not found');
+    
+      // Restore the mock
+      require('../models/Car').findById.mockRestore();
+    });
   });
 
   describe('DELETE /api/v1/bookings/:bookingId', () => {
