@@ -435,6 +435,29 @@ describe('Booking Routes', () => {
   describe('PUT /api/v1/bookings/:bookingId', () => {
     let newStartDate = new Date(Date.now() + 86400000 * 2).toISOString(); 
     let newEndDate = new Date(Date.now() + 86400000 * 4).toISOString();
+
+    let promo_Id;
+  
+    beforeEach(async () => {
+      // Create a promotion
+      const promoRes = await request(app)
+        .post('/api/v1/promotions')
+        .set('Authorization', `Bearer ${token}`) // Provider token
+        .send({
+          title: '10% Off',
+          description: 'Get 10% off your booking!',
+          discountPercentage: 10,
+          maxDiscountAmount: 500,
+          minPurchaseAmount: 1000,
+          startDate: new Date(Date.now() - 86400000).toISOString(), // Started yesterday
+          endDate: new Date(Date.now() + 86400000 * 7).toISOString(), // Ends in 7 days
+          provider: providerId,
+          amount: 5,
+        });
+  
+      promo_Id = promoRes.body.data._id;
+    });
+
     it('should update a booking', async () => {
       const res = await request(app)
         .put(`/api/v1/bookings/${bookingId}`)
@@ -448,6 +471,89 @@ describe('Booking Routes', () => {
       expect(res.body.data).toHaveProperty('_id', bookingId.toString());
       expect(res.body.data.start_date).toBe(newStartDate);
       expect(res.body.data.end_date).toBe(newEndDate);
+    });
+
+    it('should update a booking with promotion', async () => {
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate, 
+          end_date: newEndDate, 
+          promoId: promo_Id,
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data).toHaveProperty('_id', bookingId.toString());
+      expect(res.body.data.start_date).toBe(newStartDate);
+      expect(res.body.data.end_date).toBe(newEndDate);
+    });
+
+
+    it('should return 400 if the promotion provider does not match the car provider', async () => {
+      await User.deleteOne({ email: 'unique.provider@example.com' });
+      const otherProviderRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unique Provider',
+          telephoneNumber: '0999999999',
+          email: 'unique.provider@example.com',
+          password: 'password123',
+          role: 'provider',
+        });
+    
+      const otherProviderToken = otherProviderRes.body.token;
+      const otherProviderUserId = otherProviderRes.body.data._id;
+      createdIds.users.push(otherProviderUserId);
+    
+      // Create a rental car provider for the new provider user
+      const otherRcpRes = await request(app)
+        .post('/api/v1/rentalcarproviders')
+        .set('Authorization', `Bearer ${otherProviderToken}`)
+        .send({
+          name: 'Unique Test Provider',
+          address: '456 Another Street',
+          district: 'Uptown',
+          province: 'Chiang Mai',
+          postalcode: '50200',
+          tel: '0999999999',
+          region: 'North',
+          user: otherProviderUserId,
+        });
+    
+      const otherProviderId = otherRcpRes.body.data._id;
+      createdIds.providers.push(otherProviderId);
+    
+      // Create a promotion for the new provider
+      const otherPromoRes = await request(app)
+        .post('/api/v1/promotions')
+        .set('Authorization', `Bearer ${otherProviderToken}`)
+        .send({
+          title: '20% Off',
+          description: 'Get 20% off!',
+          discountPercentage: 20,
+          maxDiscountAmount: 1000,
+          minPurchaseAmount: 1000,
+          startDate: new Date(Date.now() - 86400000).toISOString(),
+          endDate: new Date(Date.now() + 86400000 * 7).toISOString(),
+          provider: otherProviderId,
+          amount: 5,
+        });
+    
+      const otherPromoId = otherPromoRes.body.data._id;
+      
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate, 
+          end_date: newEndDate, 
+          promoId: otherPromoId,
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Promotion provider does not match car provider');
     });
 
     it('should not update a booking with invalid dates', async () => {
@@ -962,3 +1068,4 @@ describe('Booking Routes', () => {
     });
   });
 });
+
