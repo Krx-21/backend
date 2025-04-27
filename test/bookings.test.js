@@ -772,7 +772,129 @@ describe('Booking Routes', () => {
       expect(res.body.message).toBe('You are not authorized to delete booking for other providers beside your own');
     });
   });
+
+  describe('POST /api/v1/cars/:carId/bookings with promotions', () => {
+    let promoId;
+  
+    beforeEach(async () => {
+      // Create a promotion
+      const promoRes = await request(app)
+        .post('/api/v1/promotions')
+        .set('Authorization', `Bearer ${token}`) // Provider token
+        .send({
+          title: '10% Off',
+          description: 'Get 10% off your booking!',
+          discountPercentage: 10,
+          maxDiscountAmount: 500,
+          minPurchaseAmount: 1000,
+          startDate: new Date(Date.now() - 86400000).toISOString(), // Started yesterday
+          endDate: new Date(Date.now() + 86400000 * 7).toISOString(), // Ends in 7 days
+          provider: providerId,
+          amount: 5,
+        });
+  
+      promoId = promoRes.body.data._id;
+    });
+
+    it('should apply a valid promotion successfully', async () => {
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
+          end_date: new Date(Date.now() + 86400000 * 3).toISOString(), // 3 days from now
+          promoId,
+        });
+  
+      expect(res.statusCode).toBe(201);
+      expect(res.body.data.totalprice).toBeLessThan(3600); // Base price = 1200 * 3 = 3600
+      expect(res.body.data.totalprice).toBeGreaterThan(0);
+    });
+
+    it('should return 500 if the promotion does not exist', async () => {
+      const invalidPromoId = '123456789012345678901234'; // Non-existent promoId
+  
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
+          end_date: new Date(Date.now() + 86400000 * 3).toISOString(), // 3 days from now
+          promoId: invalidPromoId,
+        });
+  
+      expect(res.statusCode).toBe(500);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Unexpected Error');
+    });
+
+    it('should return 500 if the promotion provider does not match the car provider', async () => {
+      // Create a new provider user
+      await User.deleteOne({ email: 'unique.provider@example.com' });
+      const otherProviderRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unique Provider',
+          telephoneNumber: '0999999999',
+          email: 'unique.provider@example.com',
+          password: 'password123',
+          role: 'provider',
+        });
+    
+      const otherProviderToken = otherProviderRes.body.token;
+      const otherProviderUserId = otherProviderRes.body.data._id;
+      createdIds.users.push(otherProviderUserId);
+    
+      // Create a rental car provider for the new provider user
+      const otherRcpRes = await request(app)
+        .post('/api/v1/rentalcarproviders')
+        .set('Authorization', `Bearer ${otherProviderToken}`)
+        .send({
+          name: 'Unique Test Provider',
+          address: '456 Another Street',
+          district: 'Uptown',
+          province: 'Chiang Mai',
+          postalcode: '50200',
+          tel: '0999999999',
+          region: 'North',
+          user: otherProviderUserId,
+        });
+    
+      const otherProviderId = otherRcpRes.body.data._id;
+      createdIds.providers.push(otherProviderId);
+    
+      // Create a promotion for the new provider
+      const otherPromoRes = await request(app)
+        .post('/api/v1/promotions')
+        .set('Authorization', `Bearer ${otherProviderToken}`)
+        .send({
+          title: '20% Off',
+          description: 'Get 20% off!',
+          discountPercentage: 20,
+          maxDiscountAmount: 1000,
+          minPurchaseAmount: 1000,
+          startDate: new Date(Date.now() - 86400000).toISOString(),
+          endDate: new Date(Date.now() + 86400000 * 7).toISOString(),
+          provider: otherProviderId,
+          amount: 5,
+        });
+    
+      const otherPromoId = otherPromoRes.body.data._id;
+    
+      // Attempt to use the promotion with a car from a different provider
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000).toISOString(),
+          end_date: new Date(Date.now() + 86400000 * 3).toISOString(),
+          promoId: otherPromoId,
+        });
+    
+      // Assertions
+      expect(res.statusCode).toBe(500);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Unexpected Error');
+    });
+  });
 });
-
-
-
