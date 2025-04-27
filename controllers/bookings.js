@@ -217,24 +217,78 @@ exports.updateBooking = async (req, res, next) => {
 			});
 		}
 
-		const startDate = new Date(req.body.start_date)
-		const endDate = new Date(req.body.end_date)
+		if (req.body.start_date && req.body.end_date) {
+			const startDate = new Date(req.body.start_date);
+			const endDate = new Date(req.body.end_date);
 
-		if (!req.body.start_date || !req.body.end_date) {
-			return res.status(400).json({ success: false, message: "startDate and endDate are required" });
+			if (startDate > endDate) {
+				return res.status(400).json({
+					success: false,
+					message: "Start date must be before end date."
+				});
+			}
+			if (startDate < Date.now()) {
+				return res.status(400).json({
+					success: false,
+					message: "Can't Make Reservation in Past"
+				});
+			}
+
+			const car = await Car.findById(booking.car._id);
+			if (!car) {
+				return res.status(404).json({ success: false, message: 'Car not found' });
+			}
+
+			const diffInMs = endDate - startDate;
+			const numberOfDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+			const basePrice = car.pricePerDay * numberOfDays;
+			let finalPrice = basePrice;
+
+			const promoId = req.body.promoId;
+			if (promoId) {
+				const promotion = await Promotion.findById(promoId);
+				if (promotion) {
+					if (promotion.provider && promotion.provider.toString() !== car.provider.toString()) {
+						return res.status(400).json({
+							success: false,
+							message: "Promotion provider does not match car provider"
+						});
+					}
+
+					const now = new Date();
+					const isValidPromo =
+						now >= new Date(promotion.startDate) &&
+						now <= new Date(promotion.endDate) &&
+						basePrice >= promotion.minPurchaseAmount &&
+						promotion.amount > 0;
+
+					if (isValidPromo) {
+						const discount = Math.min(
+							(promotion.discountPercentage / 100) * basePrice,
+							promotion.maxDiscountAmount
+						);
+						finalPrice = basePrice - discount;
+						if (finalPrice < 0) finalPrice = 0;
+
+						promotion.amount -= 1;
+						await promotion.save();
+					}
+				}
+			}
+
+			req.body.totalprice = finalPrice;
 		}
 
-		if (startDate > endDate) {
-			return res.status(400).json({
-				success: false,
-				message: "Start date must be before end date."
-			});
+		if (req.body.status && (req.body.statusUpdateOnly || (!req.body.start_date && !req.body.end_date))) {
+			console.log('Status-only update detected for booking:', req.params.id);
+			booking.status = req.body.status;
+			booking = await booking.save();
+
+			return res.status(200).json({ success: true, data: booking });
 		}
-		if (startDate < Date.now()) {
-			return res.status(400).json({
-				success: false,
-				message: "Can't Make Reservation in Past"
-			})
+
+		if (!req.body.totalprice) {
+			req.body.totalprice = booking.totalprice;
 		}
 
 		booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {

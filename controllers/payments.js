@@ -2,7 +2,7 @@ const Booking = require('../models/Booking');
 
 // @desc    Verify payment and update booking status
 // @route   GET /api/v1/payments/verify/:id
-// @access  Public
+// @access  Private
 exports.verifyPayment = async (req, res) => {
 	try {
 		const bookingId = req.params.id;
@@ -13,6 +13,13 @@ exports.verifyPayment = async (req, res) => {
 			return res.status(404).json({
 				success: false,
 				message: `Booking with ID ${bookingId} not found`
+			});
+		}
+
+		if (req.user && booking.user.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'provider') {
+			return res.status(401).json({
+				success: false,
+				message: `User ${req.user.id} is not authorized to update this booking`
 			});
 		}
 
