@@ -49,32 +49,87 @@ describe('Cars Controller', () => {
       });
     });
 
-    it('should return 500 if an error occurs', async () => {
-        const req = { query: {}, params: {} };
-        const res = mockRes();
-      
-        const mockQuery = {
-          populate: jest.fn().mockReturnThis(),
-          select: jest.fn().mockReturnThis(),
-          sort: jest.fn().mockReturnThis(),
-          skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockImplementation(() => {
-            throw new Error('Unexpected Error');
-          }),
-        };
-      
-        jest.spyOn(Car, 'find').mockReturnValue(mockQuery);
-        jest.spyOn(Car, 'countDocuments').mockResolvedValue(2); // Still needed for pagination logic
-      
-        await getCars(req, res);
-      
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-          success: false,
-          message: 'Unexpected Error',
-        });
+    it('should call Car.countDocuments and include pagination in the response', async () => {
+      const req = { query: { page: '1', limit: '2' }, params: {} }; // Page 1, limit 2
+      const res = mockRes();
+    
+      const mockCars = [{ brand: 'Toyota' }, { brand: 'Honda' }];
+      const mockQuery = {
+        populate: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue(mockCars),
+      };
+    
+      jest.spyOn(Car, 'find').mockReturnValue(mockQuery);
+      jest.spyOn(Car, 'countDocuments').mockResolvedValue(5);
+    
+      await getCars(req, res);
+
+      expect(Car.countDocuments).toHaveBeenCalled(); 
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        count: 2,
+        pagination: {
+          next: { page: 2, limit: 2 }, 
+        },
+        data: mockCars,
+      });
+      jest.restoreAllMocks();
     });
-      
+
+    it('should include pagination.next if there are more cars to fetch', async () => {
+      const req = { query: { page: '1', limit: '1' }, params: {} }; // Page 1, limit 1
+      const res = mockRes();
+    
+      const mockCars = [{ brand: 'Toyota' }];
+      const mockQuery = {
+        populate: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue(mockCars),
+      };
+    
+      jest.spyOn(Car, 'find').mockReturnValue(mockQuery);
+      jest.spyOn(Car, 'countDocuments').mockResolvedValue(2); // Total cars = 2
+    
+      await getCars(req, res);
+    
+      expect(Car.find).toHaveBeenCalledWith({});
+      expect(Car.countDocuments).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        count: 1,
+        pagination: {
+          next: { page: 2, limit: 1 }, 
+        },
+        data: mockCars,
+      });
+    });
+
+    it('should return 500 if an unexpected error occurs', async () => {
+      const req = { query: {}, params: {} }; 
+      const res = mockRes();
+    
+      jest.spyOn(Car, 'countDocuments').mockImplementation(() => {
+        throw new Error('Unexpected Error');
+      });
+    
+      await getCars(req, res);
+    
+      expect(Car.countDocuments).toHaveBeenCalled(); 
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Unexpected Error',
+      });
+    
+      jest.restoreAllMocks();
+    });
   });
 
   describe('getCar', () => {
@@ -112,32 +167,26 @@ describe('Cars Controller', () => {
         });
     });
 
-    it('should return 500 if an error occurs', async () => {
-        const req = { query: {}, params: {} };
-        const res = mockRes();
-      
-        const mockQuery = {
-          populate: jest.fn().mockReturnThis(),
-          select: jest.fn().mockReturnThis(),
-          sort: jest.fn().mockReturnThis(),
-          skip: jest.fn().mockReturnThis(),
-          limit: jest.fn().mockImplementation(() => {
-            throw new Error('Unexpected Error');
-          }),
-        };
-      
-        jest.spyOn(Car, 'find').mockReturnValue(mockQuery);
-        jest.spyOn(Car, 'countDocuments').mockResolvedValue(2); // Optional, but safe
-      
-        await getCars(req, res);
-      
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-          success: false,
-          message: 'Unexpected Error',
-        });
+    it('should return 500 if an unexpected error occurs', async () => {
+      const req = { params: { id: 'car123' } }; // Simulate a request with a car ID
+      const res = mockRes();
+    
+      // Mock Car.findById to throw an error
+      jest.spyOn(Car, 'findById').mockImplementation(() => {
+        throw new Error('Unexpected Error');
       });
-      
+    
+      await getCar(req, res);
+
+      expect(Car.findById).toHaveBeenCalledWith('car123'); // Ensure findById is called with the correct ID
+      expect(res.status).toHaveBeenCalledWith(500); // Ensure the response status is 500
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Unexpected Error', // Ensure the correct error message is returned
+      });
+
+      jest.restoreAllMocks();
+    });
   });
 
   describe('createCar', () => {
@@ -485,6 +534,40 @@ describe('Cars Controller', () => {
       });
     });
   
+    it('should return 400 if provider doesn\'t match car\'s provider', async () => {
+      const req = { body: { carId: 'car123', numberOfDays: 5, promoId: 'promo123' } };
+      const res = mockRes();
+    
+      const mockCar = { _id: 'car123', pricePerDay: 100, provider: 'provider123' };
+      const mockPromotion = { _id: 'promo123', provider: 'provider456' }; // Different provider
+    
+      jest.spyOn(Car, 'findById').mockResolvedValue(mockCar);
+      jest.spyOn(Promotion, 'findById').mockResolvedValue(mockPromotion);
+    
+      await calculateCarPrice(req, res);
+    
+      // Assertions
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Promotion provider does not match car provider.' });
+    
+      // Restore mocks
+      Car.findById.mockRestore();
+      Promotion.findById.mockRestore();
+    });
+
+    it('should return 400 if payload is missing', async () => {
+      const req = { body: {} }; // Missing required fields: carId and numberOfDays
+      const res = mockRes();
+    
+      await calculateCarPrice(req, res);
+    
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'carId and numberOfDays are required',
+      });
+    });
+
     it('should return 404 if promotion is not found', async () => {
       const req = { body: { carId: 'car123', numberOfDays: 5, promoId: 'promo123' } };
       const res = mockRes();
