@@ -42,7 +42,7 @@ const limiter=rateLimit({
   windowsMs:10*60*1000,
   max: 100
 });
-app.use(limiter);
+//app.use(limiter);
 app.use(hpp());
 
 app.use('/api/v1/rentalCarProviders', rentalCarProviders);

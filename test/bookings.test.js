@@ -431,9 +431,77 @@ describe('Booking Routes', () => {
 
       require('../models/Booking').findById.mockRestore();
     });
+
+    it('should return 400 if startDate is before current date', async () => {   
+         const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() - 86400000).toISOString(), // Start date is in the past
+          end_date: newEndDate,
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toBe("Can't Make Reservation in Past");
+    });
+    
+    it('should return 400 if startDate and endDate are not provided', async () => {
+      const res = await request(app)
+      .put(`/api/v1/bookings/${bookingId}`)
+      .set('Authorization', `Bearer ${regUserToken}`)
+      .send({
+        // No start_date and end_date provided
+      });
+      expect(res.statusCode).toBe(400);     
+      expect(res.body.message).toBe("startDate and endDate are required");
+    });
+
+    it('should return 404 if bookingId is not found', async () => {
+      const res = await request(app)
+        .put('/api/v1/bookings/123456789012345678901234')
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: newStartDate,
+          end_date: newEndDate,
+        });
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body.message).toBe('No booking with the id of 123456789012345678901234');
+    });
+
+    it('should return 401 if the user is not authorized to update the booking that is not their booking', async () => {
+      // Create a new user who does not own the booking
+      await User.deleteOne({ email: 'unauthorized.user@example.com' });
+      const newUserRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unauthorized User',
+          telephoneNumber: '0000800000',
+          email: 'unauthorized.user@example.com',
+          password: 'password123',
+          role: 'user',
+        });
+
+      const unauthorizedUserToken = newUserRes.body.token;
+
+      // Attempt to update the booking with the unauthorized user's token
+      const res = await request(app)
+        .put(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${unauthorizedUserToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+          end_date: new Date(Date.now() + 86400000 * 4).toISOString(),
+        });
+
+      // Assertions
+      expect(res.statusCode).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe(`User ${newUserRes.body.data._id} is not authorized to update this booking`);
+    });
   });
 
   describe('DELETE /api/v1/bookings/:bookingId', () => {
+    
     it('should delete a booking', async () => {
       console.log('Booking ID:', bookingId);
       const res = await request(app)
@@ -469,5 +537,31 @@ describe('Booking Routes', () => {
 			// Restore the mock
 			mockFindById.mockRestore();
 		});
+
+    it('should return 403 if the provider is not authorized to delete the booking', async () => {
+      // Create a new provider user who does not own the car
+      await User.deleteOne({ email: 'unauthorized.provider@example.com' });
+      const newProviderRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unauthorized Provider',
+          telephoneNumber: '090909090909',
+          email: 'unauthorized.provider@example.com',
+          password: 'password123',
+          role: 'provider',
+        });
+    
+      const unauthorizedProviderToken = newProviderRes.body.token;
+    
+      // Attempt to delete the booking with the unauthorized provider's token
+      const res = await request(app)
+        .delete(`/api/v1/bookings/${bookingId}`)
+        .set('Authorization', `Bearer ${unauthorizedProviderToken}`);
+    
+      // Assertions
+      expect(res.statusCode).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('You are not authorized to delete booking for other providers beside your own');
+    });
   });
 });
