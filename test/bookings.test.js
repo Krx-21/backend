@@ -245,6 +245,50 @@ describe('Booking Routes', () => {
       expect(res.body.message).toBe('No rental car provider with the id of 123456789012345678901234');
     } );
 
+    it('should return 400 if the user makes a booking in the past', async () => {
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${regUserToken}`)
+        .send({
+          start_date: new Date(Date.now() - 86400000).toISOString(), // Start date is in the past
+          end_date: new Date(Date.now()).toISOString(), // End date is also in the past
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.message).toBe("Can't Make Reservation in Past");
+    });
+
+
+    it('should return 403 if the provider tries to add booking for other providers beside their own', async () => {
+      // Create a new provider user who does not own the car
+      await User.deleteOne({ email: 'unauthorized.provider673305@example.com' });
+      const newProviderRes = await request(app)
+        .post('/api/v1/auth/register')
+        .send({
+          name: 'Unauthorized Provider for 403',
+          telephoneNumber: '000000111111',
+          email: 'unauthorized.provider673305@example.com',
+          password: 'password123',
+          role: 'provider',
+        });
+    
+      const unauthorizedProviderToken = newProviderRes.body.token;
+    
+      // Attempt to add a booking for the car with the unauthorized provider's token
+      const res = await request(app)
+        .post(`/api/v1/cars/${carId}/bookings`)
+        .set('Authorization', `Bearer ${unauthorizedProviderToken}`)
+        .send({
+          start_date: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
+          end_date: new Date(Date.now() + 86400000 * 3).toISOString(), // 3 days from now
+        });
+    
+      // Assertions
+      expect(res.statusCode).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('You are not authorized to add booking for other providers beside your own');
+    });
+
 
   });
 
