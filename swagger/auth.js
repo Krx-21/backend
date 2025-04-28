@@ -203,11 +203,11 @@
  *           schema:
  *             type: object
  *             required:
- *               - carId
+ *               - booking
  *             properties:
- *               carId:
+ *               booking:
  *                 type: string
- *                 description: Car ID to mark as booked
+ *                 description: Booking ID to mark as booked
  *     responses:
  *       200:
  *         description: Car marked as booked successfully

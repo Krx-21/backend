@@ -52,7 +52,6 @@ exports.getBookings = async (req, res, next) => {
 					path: "provider"
 				}
 			});
-			console.log("eie")
 		} else {
 			query = Booking.find().populate({
 				path: 'car',
