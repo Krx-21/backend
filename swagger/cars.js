@@ -66,20 +66,14 @@
  *             type: object
  *             required:
  *               - carId
- *               - startDate
- *               - endDate
+ *               - numberOfDays
  *             properties:
  *               carId:
  *                 type: string
  *                 description: Car ID
- *               startDate:
- *                 type: string
- *                 format: date-time
- *                 description: Rental start date
- *               endDate:
- *                 type: string
- *                 format: date-time
- *                 description: Rental end date
+ *               numberOfDays:
+ *                 type: integer
+ *                 description: Number of rental days
  *               promotionId:
  *                 type: string
  *                 description: Promotion ID (optional)
