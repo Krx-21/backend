@@ -15,6 +15,7 @@ const helmet = require('helmet');
 const {xss} = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
+const swaggerDocs = require('./config/swagger');
 
 // Load env vars
 dotenv.config({ path: 'config/config.env' });
@@ -22,16 +23,7 @@ dotenv.config({ path: 'config/config.env' });
 const app = express();
 
 // CORS config - Allow all origins
-const corsOptions = {
-  origin: ['https://web-project-delta-nine.vercel.app', 'http://localhost:5000'],
-  methods: 'GET, POST, OPTIONS, PUT, DELETE',
-  allowedHeaders: 'Content-Type, Authorization',
-  credentials: true,
-};
-
-
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(cookieParser());
@@ -56,6 +48,6 @@ app.use('/api/v1/images', images);
 app.use('/api/v1/payments', payments);
 
 // Setup Swagger documentation
-//swaggerDocs(app);
+swaggerDocs(app);
 
 module.exports = app;
