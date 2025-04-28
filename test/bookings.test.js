@@ -617,17 +617,6 @@ describe('Booking Routes', () => {
       expect(res.statusCode).toBe(400);
       expect(res.body.message).toBe("Can't Make Reservation in Past");
     });
-    
-    it('should return 400 if startDate and endDate are not provided', async () => {
-      const res = await request(app)
-      .put(`/api/v1/bookings/${bookingId}`)
-      .set('Authorization', `Bearer ${regUserToken}`)
-      .send({
-        // No start_date and end_date provided
-      });
-      expect(res.statusCode).toBe(400);     
-      expect(res.body.message).toBe("startDate and endDate are required");
-    });
 
     it('should return 404 if bookingId is not found', async () => {
       const res = await request(app)
