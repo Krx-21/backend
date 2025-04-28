@@ -55,7 +55,7 @@
  *         $ref: '#/components/responses/ServerError'
  * 
  * /cars/calculate-price:
- *   post:
+  *   post:
  *     summary: Calculate car rental price
  *     tags: [Cars]
  *     requestBody:
