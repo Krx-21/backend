@@ -53,7 +53,7 @@
  *                     $ref: '#/components/schemas/Car'
  *       500:
  *         $ref: '#/components/responses/ServerError'
- * 
+ *
  * /cars/calculate-price:
   *   post:
  *     summary: Calculate car rental price
@@ -105,7 +105,7 @@
  *         $ref: '#/components/responses/NotFoundError'
  *       500:
  *         $ref: '#/components/responses/ServerError'
- * 
+ *
  * /cars/{id}:
  *   get:
  *     summary: Get a single car
@@ -185,7 +185,9 @@
  *                 type: array
  *                 items:
  *                   type: string
- *                 description: Car images
+ *                   format: base64
+ *                 description: Array of car images as base64 encoded strings (max 5 images)
+ *                 example: ["data:image/jpeg;base64,/9j/4AAQSkZJRg...", "data:image/png;base64,iVBORw0KGg..."]
  *     responses:
  *       200:
  *         description: Car updated successfully
@@ -241,7 +243,7 @@
  *         $ref: '#/components/responses/NotFoundError'
  *       500:
  *         $ref: '#/components/responses/ServerError'
- * 
+ *
  * /cars/{providerId}:
  *   post:
  *     summary: Create a new car for a provider
@@ -303,7 +305,9 @@
  *                 type: array
  *                 items:
  *                   type: string
- *                 description: Car images
+ *                   format: base64
+ *                 description: Array of car images as base64 encoded strings (max 5 images)
+ *                 example: ["data:image/jpeg;base64,/9j/4AAQSkZJRg...", "data:image/png;base64,iVBORw0KGg..."]
  *     responses:
  *       201:
  *         description: Car created successfully
@@ -331,7 +335,7 @@
  *               $ref: '#/components/schemas/Error'
  *       500:
  *         $ref: '#/components/responses/ServerError'
- * 
+ *
  * /cars/{carId}/comments:
  *   get:
  *     summary: Get all comments for a car
